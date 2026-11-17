@@ -19,11 +19,15 @@ const CONFIG = {
     { name: "wsnUSDC - Sovren (USDC)", address: "0x50bae2675A6D7D9CADf9e2Ec96c7e45897Be8603", underlying: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" }
   ],
 
-  // The artist mint collection (live, ETH fee)
-  WSA_MINT: "0x0E3A2A1f2146d86A604adc220b4967A898D7FE07",
+  // The artist mint collection (LIVE since Nov 7, 2026). Mint fee is
+  // 0.0112 ETH (~$25, setMintFee-adjustable), paid by the minter, routed
+  // by the contract itself to the treasury wallet below. Same contract
+  // the website's /mint/ page uses.
+  WSA_MINT: "0xEda93378F2d17747657d16B7EEB4bAf2E4a46a94",
 
-  // WSC treasury - receives marketplace and scrape fees. Baked into the
-  // contracts at deploy; kept here for display and reference.
+  // WSC treasury - receives marketplace and scrape fees, plus artist mint
+  // fees. Baked into the contracts at deploy; kept here for display and
+  // reference.
   TREASURY: "0xA4452c06D9Fe04dD1cEe1f952DE85198d59BfB32",
 
   // WSC-owned wallets. The offeror line: listings from these wallets are
