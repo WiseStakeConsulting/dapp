@@ -1,6 +1,6 @@
 # Deploy Guide - Remix, click by click
 
-Four contracts, about 25 minutes. Do it on desktop with MetaMask installed. Gas should cost under a few dollars total at normal times.
+Five contracts, about 30 minutes. Do it on desktop with MetaMask installed. Gas should cost under a few dollars total at normal times.
 
 ## Before you start
 
@@ -46,12 +46,23 @@ What this contract is: a bundle takes CUSTODY of what you already hold - a Signa
 
 (The old wrapper at 0xD4007 is retired in place: untouched, unmentioned by this dapp, its three bundles keep scraping exactly as they always have.)
 
+## Deploy 5 - WiseStakeArtistV2 (the mint, priced in WISE)
+
+1. New file `WiseStakeArtistV2.sol`, paste the contents of `contracts/WiseStakeArtistV2.sol`, compile (0.8.25). Two constructor arguments:
+   - `_treasury`: `0xA4452c06D9Fe04dD1cEe1f952DE85198d59BfB32`
+   - `_initialPrice`: `253000000000000000000` (that is 253 WISE, the $25-equivalent at ~$0.099/WISE on Nov 17)
+2. Deploy, confirm, wait for the green check. Copy the address.
+
+How it works: the artist mints from THEIR OWN wallet (provenance starts at the creator), and the contract pulls the WISE fee straight to treasury in the same call - it never holds a balance. Minting is closed whenever the price is 0. To change the price later (WISE moves, you want $30), open the contract's Write Contract page as owner and call `setMintPrice(newAmountInWei)` - 1 WISE = 1000000000000000000. Check the live USD price on the dapp's own ticker.
+
+(The old ETH-priced mint at 0xEda93378F2d17747657d16B7EEB4bAf2E4a46a94 is retired in place - untouched, unreferenced. The website's /mint/ page still points at it; move that over whenever you're ready.)
+
 ## Wire it up (2 minutes)
 
 1. On GitHub, open this repo, then `js/config.js`, click the pencil icon.
-2. Paste each address into its matching empty quotes: `MARKETPLACE`, `POSITION_NFT`, `COMING_SOON`, `BUNDLE_NFT`.
+2. Paste each address into its matching empty quotes: `MARKETPLACE`, `POSITION_NFT`, `COMING_SOON`, `BUNDLE_NFT`, `WSA_MINT`.
 3. Commit (green button, commit to main).
-4. Refresh the dapp - all four tabs come alive.
+4. Refresh the dapp - all five tabs come alive.
 
 ## Go live on dapp.wisestake.consulting
 
@@ -63,7 +74,7 @@ What this contract is: a bundle takes CUSTODY of what you already hold - a Signa
 
 ## First test (tiny-first - do this before showing anyone)
 
-1. Mint a throwaway NFT on the Mint tab (fee is small).
+1. Mint a throwaway NFT on the Mint tab: approve WISE, mint with a test title. The fee (~253 WISE at deploy price) goes to treasury - check it arrived. Gas is ETH, the price is WISE.
 2. Signal it on the Coming Soon tab - confirm it appears in the directory, then withdraw the signal and confirm it disappears. This proves the registry loop end to end.
 3. Bundles tab: flip the rail from wisestake.eth to wisestakes.eth and back - share link should follow.
 4. Click "Open Wise One - this rail's door" on Denise's rail: the 10% referral bonus should show on arrival.
@@ -72,7 +83,7 @@ What this contract is: a bundle takes CUSTODY of what you already hold - a Signa
    - Wrap it into a bundle (no rider). The card moves into custody and Bundle #1 appears on your tab.
    - Scrape 1 day. Check the split: 1% to treasury, patron share (0% = none), rest to you.
    - Close the bundle. The card must come back to your wallet, receipt burned.
-   - Only after that loop is clean: try a wrap with a rider NFT, then a vault wrap with a small receipt amount.
+   - Only after that loop is clean: try a wrap with a rider NFT (the artist mint you just made works - that's the full WISE loop), then a vault wrap with a small receipt amount.
 7. Scrape-day note: the contract caps scrape days at what is actually available, so oversized requests pay what exists instead of reverting. If a scrape pays less than you expected, that is the cap working.
 
 ## After the attorney letter (later, not now)
