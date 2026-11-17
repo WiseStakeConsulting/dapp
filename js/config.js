@@ -26,6 +26,14 @@ const CONFIG = {
   // contract at deploy; kept here for display and reference.
   TREASURY: "0xA4452c06D9Fe04dD1cEe1f952DE85198d59BfB32",
 
+  // WSC-owned wallets. The offeror line: listings from these wallets are
+  // WSC inventory sales and stay closed until the attorney reliance letter.
+  // The UI warns when a connected wallet appears here. Personal wallets
+  // never go in this list - see the wallet schedule (LLC records).
+  WSC_WALLETS: [
+    "0xA4452c06D9Fe04dD1cEe1f952DE85198d59BfB32" // treasury
+  ],
+
   // Referral rails - whose name is on the teaching. Stakes are created in
   // Wise One through the rail's referral door; the door link carries the
   // referral credit, so visitors leave Wise One's team referral address
@@ -44,7 +52,7 @@ const CONFIG = {
   // FILL AFTER DEPLOY (DEPLOY.md walks through it):
   POSITION_NFT: "", // WisePositionNFT - yield-bearing position receipts
   BUNDLE_NFT: "",   // WiseBundleNFT - bundles born as NFTs
-  MARKETPLACE: "",  // WiseMarketplace - atomic WISE sales, 2% to treasury
+  MARKETPLACE: "",  // WiseMarketplace - atomic WISE sales, 2% to treasury, salesOpen gate OFF at deploy
 
   // USD ticker
   COINGECKO_ID: "wise-token"

@@ -147,6 +147,10 @@ footer a{color:var(--gold2);text-decoration:none}
         <p class="note">The marketplace contract is not deployed yet. Deploy it from Remix with the guide in the repo (DEPLOY.md), then paste its address into js/config.js. Steps take about 10 minutes.</p>
       </div>
       <div id="mktApp" class="hidden">
+        <div class="panel" style="background:var(--navy2)">
+          <div class="status" id="gateStatus" style="margin-top:0">Connect a wallet to check the sales gate.</div>
+          <div class="note hidden" id="wscWarn" style="margin-top:8px;border-left:2px solid var(--err);padding-left:12px;color:var(--err)">This wallet is on the WSC wallets list. WSC inventory listings are a company sale - they stay closed until the attorney reliance letter. List personal positions from a personal wallet.</div>
+        </div>
         <div class="grid">
           <div class="card">
             <h4>List an item</h4>
@@ -154,7 +158,7 @@ footer a{color:var(--gold2);text-decoration:none}
             <label>Collection address</label><input type="text" id="listToken" placeholder="0x...">
             <label>Token ID</label><input type="text" id="listId" placeholder="e.g. 59">
             <label>Price (WISE)</label><input type="text" id="listPrice" placeholder="e.g. 250">
-            <button class="gold" onclick="doApprove()">1. Approve</button>
+            <button class="gold" id="listBtn" onclick="doApprove()">1. Approve</button>
             <button class="gold" onclick="doList()">2. List</button>
             <div class="status" id="listStatus"></div>
           </div>
@@ -164,11 +168,10 @@ footer a{color:var(--gold2);text-decoration:none}
             <label>Collection address</label><input type="text" id="buyToken" placeholder="0x...">
             <label>Token ID</label><input type="text" id="buyId" placeholder="e.g. 59">
             <button class="gold" onclick="doApproveWise()">1. Approve WISE</button>
-            <button class="gold" onclick="doBuy()">2. Buy</button>
+            <button class="gold" id="buyBtn" onclick="doBuy()">2. Buy</button>
             <div class="status" id="buyStatus"></div>
           </div>
         </div>
-        <p class="note" style="margin-top:14px">Sales gate: real sales open after the attorney reliance letter - browse freely, buying gated until then per the house rule.</p>
       </div>
     </div>
   </section>

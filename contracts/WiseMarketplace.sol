@@ -9,10 +9,16 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 /// @notice Atomic NFT sales priced in WISE. Seller approves the marketplace
 ///         and lists; buyer's one transaction pays the seller 98% and the
 ///         WSC treasury 2%, and moves the token. No handshakes, no custody.
+/// @dev Sales gate: salesOpen starts FALSE. Real sales stay locked on-chain
+///      until the owner flips the switch - the attorney reliance letter is
+///      the condition for opening. Browse/list prep can happen, but no buy
+///      can succeed before openSales(). This is a locked door, not a sign.
 contract WiseMarketplace is Ownable {
     IERC20 public immutable wise;
     address public treasury;
     uint16 public feeBps = 200; // 2% sale fee; cap 500 (5%)
+
+    bool public salesOpen = false; // Attorney gate: OFF at deploy
 
     struct Listing { address seller; uint256 price; bool active; }
     mapping(address => mapping(uint256 => Listing)) public listings;
@@ -22,6 +28,7 @@ contract WiseMarketplace is Ownable {
     event Canceled(address indexed collection, uint256 indexed tokenId);
     event FeeChanged(uint16 bps);
     event TreasuryChanged(address treasury);
+    event SalesOpened();
 
     constructor(address wise_, address treasury_) Ownable(msg.sender) {
         wise = IERC20(wise_);
@@ -29,6 +36,7 @@ contract WiseMarketplace is Ownable {
     }
 
     function list(address collection, uint256 tokenId, uint256 priceWise) external {
+        require(salesOpen, "sales gated pending legal review");
         require(priceWise > 0, "price 0");
         require(IERC721(collection).ownerOf(tokenId) == msg.sender, "not owner");
         require(IERC721(collection).isApprovedForAll(msg.sender, address(this)) ||
@@ -45,6 +53,7 @@ contract WiseMarketplace is Ownable {
     }
 
     function buy(address collection, uint256 tokenId) external {
+        require(salesOpen, "sales gated pending legal review");
         Listing memory l = listings[collection][tokenId];
         require(l.active, "no listing");
         listings[collection][tokenId].active = false;
@@ -60,6 +69,11 @@ contract WiseMarketplace is Ownable {
     }
 
     // admin
+    function openSales() external onlyOwner {
+        salesOpen = true;
+        emit SalesOpened();
+    }
+
     function setFeeBps(uint16 bps) external onlyOwner {
         require(bps <= 500, "cap 500");
         feeBps = bps;

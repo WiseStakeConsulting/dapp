@@ -7,11 +7,12 @@ let provider, signer, account;
 const ABI_MINT = ["function mint(string) payable returns (uint256)","function mintFee() view returns (uint256)"];
 const ABI_721 = ["function balanceOf(address) view returns (uint256)","function tokenOfOwnerByIndex(address,uint256) view returns (uint256)","function walletOfOwner(address) view returns (uint256[])","function ownerOf(uint256) view returns (address)","function setApprovalForAll(address,bool)","function isApprovedForAll(address,address) view returns (bool)","function transferFrom(address,address,uint256)","function name() view returns (string)"];
 const ABI_20 = ["function balanceOf(address) view returns (uint256)","function approve(address,uint256) returns (bool)","function allowance(address,address) view returns (uint256)","function decimals() view returns (uint8)","function symbol() view returns (string)"];
-const ABI_MKT = ["function list(address,uint256,uint256)","function cancel(address,uint256)","function buy(address,uint256)","function listings(address,uint256) view returns (address,uint256,bool)","function feeBps() view returns (uint16)","function treasury() view returns (address)"];
+const ABI_MKT = ["function list(address,uint256,uint256)","function cancel(address,uint256)","function buy(address,uint256)","function listings(address,uint256) view returns (address,uint256,bool)","function feeBps() view returns (uint16)","function treasury() view returns (address)","function salesOpen() view returns (bool)"];
 
 const $ = id => document.getElementById(id);
 const fmt = ethers.utils.formatEther;
 const short = a => a ? a.slice(0,6) + "..." + a.slice(-4) : "";
+const isWscWallet = a => a && A.WSC_WALLETS.some(w => w.toLowerCase() === a.toLowerCase());
 
 // ---------- wallet ----------
 async function connect() {
@@ -30,6 +31,7 @@ async function connect() {
     $("walletBtn").textContent = short(account);
     loadPositions();
     loadFee();
+    checkMarketGate();
   } catch (e) { console.error(e); }
 }
 
@@ -203,8 +205,38 @@ function mktInit() {
 }
 mktInit();
 
+// Sales gate: read salesOpen from the contract. OFF = no list, no buy, on-chain.
+async function checkMarketGate() {
+  if (!mktReady() || !provider) return;
+  try {
+    const c = new ethers.Contract(A.MARKETPLACE, ABI_MKT, provider);
+    const open = await c.salesOpen();
+    const g = $("gateStatus");
+    if (open) {
+      g.className = "status ok";
+      g.textContent = "Sales open - the attorney gate has been lifted.";
+      ["listBtn","buyBtn"].forEach(id => $(id).disabled = false);
+    } else {
+      g.className = "status err";
+      g.textContent = "Sales gate is ON: buying and listing are disabled on-chain until the attorney reliance letter. Browsing is open.";
+      ["listBtn","buyBtn"].forEach(id => $(id).disabled = true);
+    }
+  } catch (e) { console.error(e); }
+}
+
+// WSC wallet warning: WSC inventory never lists before the letter.
+function wscListGuard() {
+  if (isWscWallet(account)) {
+    $("wscWarn").classList.remove("hidden");
+    return confirm("This wallet is on the WSC wallets list. WSC inventory sales stay closed until the attorney reliance letter. Continue anyway?");
+  }
+  $("wscWarn").classList.add("hidden");
+  return true;
+}
+
 async function doApprove() {
   if (!signer) return alert("Connect your wallet first.");
+  if (!wscListGuard()) return;
   const s = $("listStatus"); s.className = "status wait"; s.textContent = "Approving collection for the marketplace...";
   try {
     const c = new ethers.Contract($("listToken").value.trim(), ABI_721, signer);
@@ -215,6 +247,7 @@ async function doApprove() {
 
 async function doList() {
   if (!signer) return alert("Connect your wallet first.");
+  if (!wscListGuard()) return;
   const s = $("listStatus"); s.className = "status wait";
   try {
     const c = new ethers.Contract(A.MARKETPLACE, ABI_MKT, signer);
