@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wise Stake Dapp - Everything as a Token</title>
+<meta name="description" content="Mint, hold yield-bearing positions, bundle them, and trade them atomically. One wallet, everything as a token.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦉</text></svg>">
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<style>
+:root{--navy:#0a1128;--navy2:#101a3a;--panel:#0d1733;--gold:#d4a13a;--gold2:#e8c15a;--cream:#f5efe0;--muted:#9aa5c0;--line:rgba(232,193,90,.18);--ok:#7fd48a;--err:#e08080}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--navy);color:var(--cream);font-family:Georgia,'Times New Roman',serif;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+header{position:sticky;top:0;z-index:50;background:rgba(10,17,40,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;max-width:1240px;margin:0 auto;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--cream)}
+.brand b{font-size:1.05rem;letter-spacing:.04em;line-height:1.15}
+.brand b small{display:block;font-size:.66rem;color:var(--gold2);font-style:italic;font-weight:400;letter-spacing:.09em}
+.walletbox{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#walletBtn{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);border:none;border-radius:999px;padding:10px 22px;font-family:'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:.88rem;cursor:pointer}
+#walletBtn:hover{transform:translateY(-1px)}
+#priceTag{font-family:'Helvetica Neue',Arial,sans-serif;font-size:.82rem;color:var(--muted)}
+#priceTag b{color:var(--gold2)}
+nav.tabs{display:flex;gap:4px;max-width:1240px;margin:0 auto;padding:0 16px;overflow-x:auto}
+nav.tabs button{background:none;border:none;color:var(--muted);font-family:'Helvetica Neue',Arial,sans-serif;font-size:.9rem;letter-spacing:.03em;padding:12px 16px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+nav.tabs button.on{color:var(--gold2);border-bottom-color:var(--gold)}
+main{padding:34px 0 70px}
+.hero{padding:26px 0 8px}
+.eyebrow{color:var(--gold);text-transform:uppercase;letter-spacing:.22em;font-size:.72rem;font-family:'Helvetica Neue',Arial,sans-serif}
+h1{font-size:clamp(1.9rem,4vw,2.8rem);font-weight:400;margin:10px 0 8px}
+h2{font-weight:400;font-size:1.25rem;color:var(--gold2);margin-bottom:12px}
+p.lede{color:var(--muted);max-width:720px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:20px}
+.panel h3{color:var(--gold2);font-weight:400;margin-bottom:8px}
+label{display:block;font-family:'Helvetica Neue',Arial,sans-serif;font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:12px 0 5px}
+input[type=text],input[type=number],select{width:100%;background:var(--navy);border:1px solid var(--line);border-radius:8px;color:var(--cream);padding:10px 12px;font-family:Georgia,serif;font-size:.95rem}
+button.gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);border:none;border-radius:999px;padding:12px 26px;font-family:'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;margin-top:14px}
+button.gold:disabled{opacity:.4;cursor:not-allowed}
+button.ghost{background:none;border:1px solid var(--gold);color:var(--gold2);border-radius:999px;padding:10px 22px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:.85rem;cursor:pointer;margin-top:10px}
+.status{font-family:monospace;font-size:.76rem;color:var(--muted);word-break:break-all;margin-top:10px}
+.status.ok{color:var(--ok)}.status.err{color:var(--err)}.status.wait{color:var(--gold2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-top:18px}
+.card{background:var(--navy2);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card h4{color:var(--gold2);font-weight:400}
+.card .sub{font-family:'Helvetica Neue',Arial,sans-serif;font-size:.8rem;color:var(--muted)}
+.tag{display:inline-block;font-family:'Helvetica Neue',Arial,sans-serif;font-size:.68rem;letter-spacing:.08em;border:1px solid var(--gold);color:var(--gold2);border-radius:999px;padding:1px 10px;margin-top:8px}
+.hidden{display:none}
+.note{font-family:'Helvetica Neue',Arial,sans-serif;font-size:.82rem;color:var(--muted)}
+iframe{width:100%;min-height:620px;border:0;border-radius:12px}
+footer{border-top:1px solid var(--line);padding:26px 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:.78rem;color:var(--muted)}
+footer a{color:var(--gold2);text-decoration:none}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <a class="brand" href="https://wisestake.consulting/"><b>Wise Stake<small>The dapp - everything as a token</small></b></a>
+    <div class="walletbox">
+      <span id="priceTag">WISE <b>-</b></span>
+      <button id="walletBtn" onclick="connect()">Connect Wallet</button>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button data-tab="mint" class="on">Mint</button>
+    <button data-tab="positions">Positions</button>
+    <button data-tab="bundles">Bundles</button>
+    <button data-tab="market">Marketplace</button>
+    <button data-tab="swap">Swap</button>
+  </nav>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <div class="eyebrow">One wallet &middot; Ethereum mainnet</div>
+    <h1>Mint it. Earn on it. Bundle it. <span style="color:var(--gold2)">Sell it.</span></h1>
+    <p class="lede">Every position here is a token, so every position can move. Prices are in WISE. Gas is paid in ETH - use the Swap tab to load up on both.</p>
+  </div>
+
+  <!-- MINT -->
+  <section id="tab-mint">
+    <div class="panel">
+      <h3>Mint from your own wallet</h3>
+      <p class="note">The Wise Stake Artist collection - minted by YOU, owned by YOU from block one. Flat fee in ETH, shown below. Full studio (files, story, certificate) lives on the website; this is the one-button version.</p>
+      <label for="mintTitle">Title of the work</label>
+      <input type="text" id="mintTitle" placeholder="e.g. Autumn in Ossining">
+      <div class="feebox" style="background:var(--navy);border:1px solid var(--gold);border-radius:12px;padding:14px 18px;margin-top:14px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">
+        <small class="note">Mint fee (the whole bill - gas shown by your wallet before you sign)</small>
+        <span id="feeDisplay" style="font-size:1.3rem;color:var(--gold2)">-</span>
+      </div>
+      <button class="gold" id="mintBtn" onclick="doMint()" disabled>Mint My Work</button>
+      <div class="status" id="mintStatus"></div>
+      <p class="note" style="margin-top:10px">Want the full white-glove studio (five captures, story, certificate line)? <a href="https://wisestake.consulting/mint/" style="color:var(--gold2)">Open the Mint Studio &rarr;</a></p>
+    </div>
+  </section>
+
+  <!-- POSITIONS -->
+  <section id="tab-positions" class="hidden">
+    <div class="panel">
+      <h3>What you hold</h3>
+      <p class="note">Your live, earning positions - Signature Stakes (Wise One) and vault receipts (wtnUSDC / wsnUSDC). These are what back every yield-bearing NFT and bundle.</p>
+      <div class="grid" id="posGrid"><p class="note">Connect your wallet to read your positions.</p></div>
+    </div>
+  </section>
+
+  <!-- BUNDLES -->
+  <section id="tab-bundles" class="hidden">
+    <div class="panel">
+      <h3>Bundles - born as NFTs</h3>
+      <p class="note">A bundle combines up to two of three things: a Signature Stake, a vault position, or your minted NFT as the rider. In this dapp the bundle IS an NFT - which is what makes it tradable on the Marketplace tab with zero handshakes.</p>
+      <div class="grid" id="bundleGrid"><p class="note">Bundle contract deploys with the marketplace - see the deploy guide. Until then, bundles live on the <a href="https://wisestake.consulting/app/" style="color:var(--gold2)">Console</a>.</p></div>
+    </div>
+  </section>
+
+  <!-- MARKETPLACE -->
+  <section id="tab-market" class="hidden">
+    <div class="panel">
+      <h3>Marketplace - atomic, in WISE</h3>
+      <p class="note" id="mktNote">Seller lists, buyer pays WISE, the contract swaps ownership and splits the fee in one transaction. 2% to the WSC treasury, 98% to the seller. No trusting anybody - the contract does the moving.</p>
+      <div id="mktGate" class="panel" style="background:var(--navy2)">
+        <p class="note">The marketplace contract is not deployed yet. Deploy it from Remix with the guide in the repo (DEPLOY.md), then paste its address into js/config.js. Steps take about 10 minutes.</p>
+      </div>
+      <div id="mktApp" class="hidden">
+        <div class="grid">
+          <div class="card">
+            <h4>List an item</h4>
+            <p class="sub">Approve the marketplace once per collection, then set your WISE price.</p>
+            <label>Collection address</label><input type="text" id="listToken" placeholder="0x...">
+            <label>Token ID</label><input type="text" id="listId" placeholder="e.g. 59">
+            <label>Price (WISE)</label><input type="text" id="listPrice" placeholder="e.g. 250">
+            <button class="gold" onclick="doApprove()">1. Approve</button>
+            <button class="gold" onclick="doList()">2. List</button>
+            <div class="status" id="listStatus"></div>
+          </div>
+          <div class="card">
+            <h4>Buy an item</h4>
+            <p class="sub">Approve WISE spend, then buy - ownership moves atomically.</p>
+            <label>Collection address</label><input type="text" id="buyToken" placeholder="0x...">
+            <label>Token ID</label><input type="text" id="buyId" placeholder="e.g. 59">
+            <button class="gold" onclick="doApproveWise()">1. Approve WISE</button>
+            <button class="gold" onclick="doBuy()">2. Buy</button>
+            <div class="status" id="buyStatus"></div>
+          </div>
+        </div>
+        <p class="note" style="margin-top:14px">Sales gate: real sales open after the attorney reliance letter - browse freely, buying gated until then per the house rule.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SWAP -->
+  <section id="tab-swap" class="hidden">
+    <div class="panel">
+      <h3>Swap ETH &rarr; WISE</h3>
+      <p class="note">Everything here is priced in WISE, and gas is always ETH. This is the Uniswap exchange, embedded - swap right here, or open it in a new tab if it doesn't load.</p>
+      <div style="margin-top:14px">
+        <iframe id="uniFrame" src=""></iframe>
+        <p class="note" style="margin-top:10px"><a id="uniLink" href="#" target="_blank" rel="noopener" style="color:var(--gold2)">Open in Uniswap &rarr;</a></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">Wise Stake Consulting &middot; fork-tested, not audited &middot; start small &middot; <a href="mailto:security@wisestake.consulting">security@wisestake.consulting</a></div>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
