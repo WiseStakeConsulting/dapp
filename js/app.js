@@ -3,8 +3,9 @@
 
 const A = CONFIG;
 let provider, signer, account;
+let lastWiseUsd = 0; // live USD price from DexScreener (for the fee display)
 
-const ABI_MINT = ["function mint(string) payable returns (uint256)","function mintFee() view returns (uint256)"];
+const ABI_MINT = ["function mint(string) returns (uint256)","function mintPrice() view returns (uint256)","function owner() view returns (address)"];
 const ABI_721 = ["function balanceOf(address) view returns (uint256)","function tokenOfOwnerByIndex(address,uint256) view returns (uint256)","function walletOfOwner(address) view returns (uint256[])","function ownerOf(uint256) view returns (address)","function setApprovalForAll(address,bool)","function isApprovedForAll(address,address) view returns (bool)","function transferFrom(address,address,uint256)","function name() view returns (string)"];
 const ABI_20 = ["function balanceOf(address) view returns (uint256)","function approve(address,uint256) returns (bool)","function allowance(address,address) view returns (uint256)","function decimals() view returns (uint8)","function symbol() view returns (string)"];
 const ABI_MKT = ["function list(address,uint256,uint256)","function cancel(address,uint256)","function buy(address,uint256)","function listings(address,uint256) view returns (address,uint256,bool)","function feeBps() view returns (uint16)","function treasury() view returns (address)","function salesOpen() view returns (bool)"];
@@ -56,13 +57,17 @@ document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
   if (b.dataset.tab === "bundles" && provider) { loadBundles(); loadBundleForm(); }
 });
 
-// ---------- USD ticker ----------
+// ---------- USD ticker (DexScreener - live Uniswap pair) ----------
 (async () => {
   try {
-    const r = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=" + A.COINGECKO_ID + "&vs_currencies=usd");
+    const r = await fetch(A.DEXSCREENER + A.WISE);
     const j = await r.json();
-    const p = j[A.COINGECKO_ID] && j[A.COINGECKO_ID].usd;
-    if (p) $("priceTag").innerHTML = "WISE <b>$" + p.toLocaleString(undefined,{maximumFractionDigits:2}) + "</b>";
+    const pair = (j.pairs || []).find(p => p.chainId === "ethereum" && p.dexId === "uniswap");
+    if (pair && pair.priceUsd) {
+      lastWiseUsd = parseFloat(pair.priceUsd);
+      $("priceTag").innerHTML = "WISE <b>$" + lastWiseUsd.toLocaleString(undefined,{maximumFractionDigits:4}) + "</b>";
+      loadFee(); // refresh the mint fee display with a live USD hint
+    }
   } catch (e) {}
 })();
 
@@ -146,30 +151,48 @@ async function saveRail() {
   s.textContent = "Rail set: " + rail.label + (rail.custom ? " (custom)" : "");
 }
 
-// ---------- mint ----------
+// ---------- mint (priced in WISE) ----------
+function mintReady() { return !!A.WSA_MINT; }
+
 async function loadFee() {
-  if (!A.WSA_MINT) return;
+  if (!mintReady()) { $("feeDisplay").textContent = "deploys with the batch"; return; }
   try {
     const c = new ethers.Contract(A.WSA_MINT, ABI_MINT, provider);
-    const fee = await c.mintFee();
-    $("feeDisplay").textContent = fmt(fee) + " ETH";
+    const p = await c.mintPrice();
+    if (p.isZero()) { $("feeDisplay").textContent = "mints paused"; return; }
+    const wise = fmt(p);
+    const usd = lastWiseUsd ? " (~$" + (parseFloat(wise) * lastWiseUsd).toFixed(2) + ")" : "";
+    $("feeDisplay").textContent = wise + " WISE" + usd;
+    $("mintApproveBtn").disabled = false;
     $("mintBtn").disabled = false;
   } catch (e) { $("feeDisplay").textContent = "read error"; }
 }
 
+async function bMintApprove() {
+  if (!signer) return alert("Connect your wallet first.");
+  if (!mintReady()) return alert("Mint contract not deployed yet (DEPLOY.md).");
+  const s = $("mintStatus"); s.className = "status wait"; s.textContent = "Approving WISE for the mint...";
+  try {
+    const c = new ethers.Contract(A.WISE, ABI_20, signer);
+    const tx = await c.approve(A.WSA_MINT, ethers.constants.MaxUint256);
+    await tx.wait();
+    s.className = "status ok"; s.textContent = "WISE approved. Now Mint My Work.";
+  } catch (e) { s.className = "status err"; s.textContent = "Approve failed: " + e.message.slice(0, 120); }
+}
+
 async function doMint() {
   if (!signer) return alert("Connect your wallet first.");
+  if (!mintReady()) return alert("Mint contract not deployed yet (DEPLOY.md).");
   const title = $("mintTitle").value.trim() || "Untitled";
   const s = $("mintStatus"); s.className = "status wait"; s.textContent = "Preparing...";
   try {
     const c = new ethers.Contract(A.WSA_MINT, ABI_MINT, signer);
-    const fee = await c.mintFee();
     s.textContent = "Confirm in your wallet...";
-    const tx = await c.mint(title, { value: fee });
+    const tx = await c.mint(title);
     s.textContent = "Minting... tx " + tx.hash;
     await tx.wait();
     s.className = "status ok";
-    s.innerHTML = "Minted. View: <a style='color:var(--ok)' target='_blank' href='https://etherscan.io/tx/" + tx.hash + "'>" + tx.hash + "</a>";
+    s.innerHTML = "Minted. Your work is on-chain from your own wallet. View: <a style='color:var(--ok)' target='_blank' href='https://etherscan.io/tx/" + tx.hash + "'>" + tx.hash + "</a>";
   } catch (e) { s.className = "status err"; s.textContent = "Mint failed: " + (e.data ? e.data.message : e.message); }
 }
 
