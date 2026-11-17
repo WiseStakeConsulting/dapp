@@ -1,5 +1,5 @@
 // Wise Stake dapp configuration.
-// Addresses verified on-chain Nov 2025-2026. Fill the two EMPTY strings after
+// Addresses verified on-chain Nov 2025-2026. Fill the EMPTY strings after
 // deploying the contracts (see DEPLOY.md), commit, done.
 
 const CONFIG = {
@@ -50,6 +50,7 @@ const CONFIG = {
   STAKE_BASE: "https://pro.wise.one/", // custom rails ride the generic door; credit comes from the dapp rail pick
 
   // FILL AFTER DEPLOY (DEPLOY.md walks through it):
+  COMING_SOON: "",  // ComingSoon - sell-intent registry, no prices, no offers
   POSITION_NFT: "", // WisePositionNFT - yield-bearing position receipts
   BUNDLE_NFT: "",   // WiseBundleNFT - bundles born as NFTs
   MARKETPLACE: "",  // WiseMarketplace - atomic WISE sales, 2% to treasury, salesOpen gate OFF at deploy

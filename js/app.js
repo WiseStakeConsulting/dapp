@@ -8,6 +8,7 @@ const ABI_MINT = ["function mint(string) payable returns (uint256)","function mi
 const ABI_721 = ["function balanceOf(address) view returns (uint256)","function tokenOfOwnerByIndex(address,uint256) view returns (uint256)","function walletOfOwner(address) view returns (uint256[])","function ownerOf(uint256) view returns (address)","function setApprovalForAll(address,bool)","function isApprovedForAll(address,address) view returns (bool)","function transferFrom(address,address,uint256)","function name() view returns (string)"];
 const ABI_20 = ["function balanceOf(address) view returns (uint256)","function approve(address,uint256) returns (bool)","function allowance(address,address) view returns (uint256)","function decimals() view returns (uint8)","function symbol() view returns (string)"];
 const ABI_MKT = ["function list(address,uint256,uint256)","function cancel(address,uint256)","function buy(address,uint256)","function listings(address,uint256) view returns (address,uint256,bool)","function feeBps() view returns (uint16)","function treasury() view returns (address)","function salesOpen() view returns (bool)"];
+const ABI_SOON = ["function signal(address,uint256)","function withdraw(address,uint256)","function collectionCount() view returns (uint256)","function tokensSignaled(address) view returns (uint256[])","function isActive(address,uint256) view returns (bool)","function signals(address,uint256) view returns (address,uint256,bool)"];
 
 const $ = id => document.getElementById(id);
 const fmt = ethers.utils.formatEther;
@@ -32,6 +33,7 @@ async function connect() {
     loadPositions();
     loadFee();
     checkMarketGate();
+    loadDirectory();
   } catch (e) { console.error(e); }
 }
 
@@ -39,13 +41,14 @@ async function connect() {
 document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
   document.querySelectorAll("#tabs button").forEach(x => x.classList.remove("on"));
   b.classList.add("on");
-  ["mint","positions","bundles","market","swap"].forEach(t =>
+  ["mint","positions","bundles","directory","market","swap"].forEach(t =>
     $("tab-" + t).classList.toggle("hidden", t !== b.dataset.tab));
   if (b.dataset.tab === "swap" && !$("uniFrame").src) {
     const url = "https://app.uniswap.org/swap?outputCurrency=" + A.WISE + "&theme=dark";
     $("uniFrame").src = url; $("uniLink").href = url;
   }
   if (b.dataset.tab === "positions" && account) loadPositions();
+  if (b.dataset.tab === "directory" && provider) loadDirectory();
 });
 
 // ---------- USD ticker ----------
@@ -195,6 +198,80 @@ async function loadPositions() {
     } catch (e) {}
   }
   if (!g.children.length) g.innerHTML = "<p class='note'>No Signature Stakes or vault receipts found in this wallet. Starting a stake? Use the Bundles tab pre-flight and turn ON transferable - only Signature Stakes can be bundled or sold here.</p>";
+}
+
+// ---------- directory (Coming Soon) ----------
+// A holder can signal a token they own MIGHT be for sale someday. The
+// ComingSoon contract has no price field and no payment path - it cannot
+// express an offer. Copy stays descriptive; no promises of any kind.
+function dirCollections() {
+  return [
+    A.SIG_STAKES && { name: "Signature Stakes", address: A.SIG_STAKES },
+    A.POSITION_NFT && { name: "Wise Positions", address: A.POSITION_NFT },
+    A.BUNDLE_NFT && { name: "Wise Bundles", address: A.BUNDLE_NFT },
+    A.WSA_MINT && { name: "Wise Stake Artist", address: A.WSA_MINT }
+  ].filter(Boolean);
+}
+
+async function loadDirectory() {
+  const g = $("dirGrid");
+  if (!A.COMING_SOON) {
+    g.innerHTML = "<p class='note'>The Coming Soon registry is not deployed yet - see DEPLOY.md. It is a separate, tiny contract: a sell-intent registry with no price field and no payment path.</p>";
+    return;
+  }
+  g.innerHTML = "";
+  let found = 0;
+  const soon = new ethers.Contract(A.COMING_SOON, ABI_SOON, provider);
+  for (const col of dirCollections()) {
+    let ids = [];
+    try { ids = await soon.tokensSignaled(col.address); } catch (e) { continue; }
+    for (const id of ids) {
+      const tid = id.toString();
+      let active, holder;
+      try {
+        active = await soon.isActive(col.address, id);
+        holder = (await soon.signals(col.address, id))[0];
+      } catch (e) { continue; }
+      if (!active) continue;
+      found++;
+      const d = document.createElement("div"); d.className = "card";
+      d.innerHTML = "<h4>" + col.name + " #" + tid + "</h4>" +
+        "<p class='sub'>Held by " + short(holder) + " - holder signaled interest in selling. " +
+        "No price, no promise - purchases open after legal review.</p>" +
+        "<span class='tag'>COMING SOON</span> " +
+        "<a target='_blank' rel='noopener' style='font-family:Helvetica,Arial,sans-serif;font-size:.75rem;color:var(--gold2)' href='https://etherscan.io/token/" + col.address + "?a=" + tid + "'>Etherscan</a>";
+      g.appendChild(d);
+    }
+  }
+  if (!found) g.innerHTML = "<p class='note'>No signals yet. If you hold a token and might sell it someday, signal it below - one transaction, no price, no commitment.</p>";
+}
+
+async function doSignal() {
+  if (!signer) return alert("Connect your wallet first.");
+  if (!A.COMING_SOON) return alert("Coming Soon registry not deployed yet (DEPLOY.md).");
+  const s = $("dirStatus"); s.className = "status wait";
+  try {
+    const c = new ethers.Contract(A.COMING_SOON, ABI_SOON, signer);
+    s.textContent = "Confirm in your wallet...";
+    const tx = await c.signal($("dirToken").value.trim(), $("dirId").value.trim());
+    await tx.wait();
+    s.className = "status ok"; s.textContent = "Signal posted. It appears in the directory - withdraw it any time.";
+    loadDirectory();
+  } catch (e) { s.className = "status err"; s.textContent = "Signal failed (must own the token): " + e.message.slice(0,110); }
+}
+
+async function doWithdrawSignal() {
+  if (!signer) return alert("Connect your wallet first.");
+  if (!A.COMING_SOON) return alert("Coming Soon registry not deployed yet (DEPLOY.md).");
+  const s = $("dirStatus"); s.className = "status wait";
+  try {
+    const c = new ethers.Contract(A.COMING_SOON, ABI_SOON, signer);
+    s.textContent = "Confirm in your wallet...";
+    const tx = await c.withdraw($("dirToken").value.trim(), $("dirId").value.trim());
+    await tx.wait();
+    s.className = "status ok"; s.textContent = "Signal withdrawn.";
+    loadDirectory();
+  } catch (e) { s.className = "status err"; s.textContent = "Withdraw failed (must be your signal): " + e.message.slice(0,110); }
 }
 
 // ---------- marketplace ----------
