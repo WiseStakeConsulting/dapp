@@ -1,6 +1,6 @@
 # Deploy Guide - Remix, click by click
 
-Two contracts, about 10-15 minutes. Do it on desktop with MetaMask installed. Gas should cost under a few dollars total at normal times.
+Three contracts, about 15 minutes. Do it on desktop with MetaMask installed. Gas should cost under a few dollars total at normal times.
 
 ## Before you start
 
@@ -20,19 +20,26 @@ Two contracts, about 10-15 minutes. Do it on desktop with MetaMask installed. Ga
 6. Click **Deploy**, confirm in MetaMask, and WAIT for the Activity check to turn green before touching anything (the double-click lesson from Bundle #0001).
 7. Copy the deployed contract address.
 
+**Note the sales gate:** the marketplace deploys with `salesOpen = false`. Listing and buying revert on-chain until you call `openSales()` (owner only) - that call happens the day the attorney reliance letter lands, not before. No config change needed.
+
 ## Deploy 2 - WisePositionNFT
 
 1. New file `WisePositions.sol`, paste the contents of `contracts/WisePositions.sol`, compile, deploy. No constructor arguments.
 2. Copy the deployed address.
 
-(Do NOT deploy WiseBundleNFT yet - same file, but we deploy it when the first bundle is ready to mint, so its numbering starts at #1 with a real bundle.)
+## Deploy 3 - ComingSoon
+
+1. New file `ComingSoon.sol`, paste the contents of `contracts/ComingSoon.sol`, compile, deploy. No constructor arguments.
+2. Copy the deployed address. This one is the sell-intent registry behind the Coming Soon tab - no prices, no payment path, safe to open immediately.
+
+(Do NOT deploy WiseBundleNFT yet - same file as WisePositions, but we deploy it when the first bundle is ready to mint, so its numbering starts at #1 with a real bundle.)
 
 ## Wire it up (2 minutes)
 
 1. On GitHub, open this repo, then `js/config.js`, click the pencil icon.
-2. Paste each address into its matching empty quotes: `MARKETPLACE`, `POSITION_NFT`.
+2. Paste each address into its matching empty quotes: `MARKETPLACE`, `POSITION_NFT`, `COMING_SOON`.
 3. Commit (green button, commit to main).
-4. Refresh the dapp - the Marketplace tab comes alive.
+4. Refresh the dapp - the Marketplace and Coming Soon tabs come alive.
 
 ## Go live on dapp.wisestake.consulting
 
@@ -42,9 +49,17 @@ Two contracts, about 10-15 minutes. Do it on desktop with MetaMask installed. Ga
    - Value: `wisestakeconsulting.github.io`
 3. Wait for DNS (minutes to a few hours). GitHub Pages will issue the HTTPS certificate automatically. Add `dapp.wisestake.consulting` under Settings > Pages > Custom domain, and tick "Enforce HTTPS".
 
-## First test (do this before showing anyone)
+## First test (under the sales gate - do this before showing anyone)
 
 1. Mint a throwaway NFT on the Mint tab (fee is small).
-2. List it on the Marketplace tab for 1 WISE from your admin wallet.
+2. Signal it on the Coming Soon tab - confirm it appears in the directory, then withdraw the signal and confirm it disappears. This proves the registry loop end to end.
+3. Bundles tab: flip the rail from wisestake.eth to wisestakes.eth and back - share link should follow.
+4. Click "Open Wise One - this rail's door" on Denise's rail: the 10% referral bonus should show on arrival.
+5. Marketplace tab: the gate status should read ON and the List/Buy buttons should be disabled. That is correct under the gate.
+
+## After the attorney letter (later, not now)
+
+1. From the deployer wallet, call `openSales()` on the marketplace contract.
+2. List the throwaway NFT for 1 WISE from a personal wallet.
 3. Buy it from Denise's wallet - this proves the whole atomic loop: list, pay in WISE, fee split to treasury, token moves.
 4. Check the treasury received its 2%.

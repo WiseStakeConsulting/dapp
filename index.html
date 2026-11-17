@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wise Stake Dapp - Everything as a Token</title>
-<meta name="description" content="Mint, hold yield-bearing positions, bundle them, and trade them atomically. One wallet, everything as a token.">
+<meta name="description" content="Mint, hold positions, bundle them, and trade them atomically. One wallet, everything as a token.">
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦉</text></svg>">
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
@@ -69,6 +69,7 @@ footer a{color:var(--gold2);text-decoration:none}
     <button data-tab="mint" class="on">Mint</button>
     <button data-tab="positions">Positions</button>
     <button data-tab="bundles">Bundles</button>
+    <button data-tab="directory">Coming Soon</button>
     <button data-tab="market">Marketplace</button>
     <button data-tab="swap">Swap</button>
   </nav>
@@ -77,8 +78,8 @@ footer a{color:var(--gold2);text-decoration:none}
 <main class="wrap">
   <div class="hero">
     <div class="eyebrow">One wallet &middot; Ethereum mainnet</div>
-    <h1>Mint it. Earn on it. Bundle it. <span style="color:var(--gold2)">Sell it.</span></h1>
-    <p class="lede">Every position here is a token, so every position can move. Prices are in WISE. Gas is paid in ETH - use the Swap tab to load up on both.</p>
+    <h1>Mint it. Hold it. Bundle it. <span style="color:var(--gold2)">Move it.</span></h1>
+    <p class="lede">Every position here is a token, so every position can move. Prices on the marketplace are in WISE. Gas is paid in ETH - use the Swap tab to load up on both.</p>
   </div>
 
   <!-- MINT -->
@@ -102,7 +103,7 @@ footer a{color:var(--gold2);text-decoration:none}
   <section id="tab-positions" class="hidden">
     <div class="panel">
       <h3>What you hold</h3>
-      <p class="note">Your live, earning positions - Signature Stakes (Wise One) and vault receipts (wtnUSDC / wsnUSDC). These are what back every yield-bearing NFT and bundle.</p>
+      <p class="note">Your live, earning positions - Signature Stakes (Wise One) and vault receipts (wtnUSDC / wsnUSDC). These are what back every token and bundle here.</p>
       <p class="note" style="margin-top:8px;border-left:2px solid var(--gold);padding-left:12px">Only <b>Signature Stakes</b> appear here - they are the transferable, NFT form of a WISE stake. A stake created with <i>"I prefer this stake to be transferable"</i> switched <b>off</b> stays locked to its wallet: it still earns and scrapes, but it can never be bundled, collateralized, or sold. Check for the gold YIELD tag before counting a stake toward Wise Stake services.</p>
       <div class="grid" id="posGrid"><p class="note">Connect your wallet to read your positions.</p></div>
     </div>
@@ -112,7 +113,7 @@ footer a{color:var(--gold2);text-decoration:none}
   <section id="tab-bundles" class="hidden">
     <div class="panel">
       <h3>Bundles - born as NFTs</h3>
-      <p class="note">A bundle combines up to two of three things: a Signature Stake, a vault position, or your minted NFT as the rider. In this dapp the bundle IS an NFT - which is what makes it tradable on the Marketplace tab with zero handshakes.</p>
+      <p class="note">A bundle combines up to two of three things: a Signature Stake, a vault position, or your minted NFT as the rider. In this dapp the bundle IS an NFT - which is what makes it movable on the Marketplace tab with zero handshakes.</p>
       <div class="panel" style="background:var(--navy2);margin-top:16px">
         <h3>Referral rail - whose name is on the teaching</h3>
         <p class="note">Stakes are created in Wise One through a rail's referral door. Pick a rail and it sticks in this browser. Rail owners have their own front door: <a id="railLink" href="#" style="color:var(--gold2);word-break:break-all"></a> - anyone opening that link lands with the rail pre-set.</p>
@@ -134,7 +135,25 @@ footer a{color:var(--gold2);text-decoration:none}
         <button class="gold" id="railStakeBtn">Open Wise One - this rail's door</button>
         <p class="note" style="margin-top:8px">WISE rule: a rail earns referral interest only at Critical Mass - $10,000 USD of referred stakes, valued on each stake's creation day. Stakes referred before that never earn retroactively.</p>
       </div>
-      <div class="grid" id="bundleGrid"><p class="note">Bundle contract deploys with the marketplace - see the deploy guide. Until then, bundles live on the <a href="https://wisestake.consulting/app/" style="color:var(--gold2)">Console</a>.</p></div>
+      <div class="grid" id="bundleGrid"><p class="note">Bundle contract deploys when the first bundle is ready to mint (see DEPLOY.md) so its numbering starts at #1. Until then, bundles live on the <a href="https://wisestake.consulting/app/" style="color:var(--gold2)">Console</a>.</p></div>
+    </div>
+  </section>
+
+  <!-- DIRECTORY (COMING SOON) -->
+  <section id="tab-directory" class="hidden">
+    <div class="panel">
+      <h3>Coming Soon - holders who might sell</h3>
+      <p class="note">A holder can signal that a token they own might be for sale someday. One transaction, no price, no commitment - the registry contract has no price field and no payment path. Withdraw your signal any time.</p>
+      <div class="grid" id="dirGrid"><p class="note">Reading the registry...</p></div>
+      <div class="panel" style="background:var(--navy2);margin-top:18px">
+        <h3>Signal one of yours</h3>
+        <p class="note">You must own the token. This posts a public signal only - you are never committed, and nothing is for sale here.</p>
+        <label>Collection address</label><input type="text" id="dirToken" placeholder="0x... (Signature Stakes: 0x48791DbDFB38bAA58e48329148C321bF33B3c1e1)">
+        <label>Token ID</label><input type="text" id="dirId" placeholder="e.g. 59">
+        <button class="gold" onclick="doSignal()">Signal it</button>
+        <button class="ghost" onclick="doWithdrawSignal()">Withdraw signal</button>
+        <div class="status" id="dirStatus"></div>
+      </div>
     </div>
   </section>
 
