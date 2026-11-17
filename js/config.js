@@ -19,15 +19,16 @@ const CONFIG = {
     { name: "wsnUSDC - Sovren (USDC)", address: "0x50bae2675A6D7D9CADf9e2Ec96c7e45897Be8603", underlying: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" }
   ],
 
-  // The artist mint collection (LIVE since Nov 7, 2026). Mint fee is
-  // 0.0112 ETH (~$25, setMintFee-adjustable), paid by the minter, routed
-  // by the contract itself to the treasury wallet below. Same contract
-  // the website's /mint/ page uses.
-  WSA_MINT: "0xEda93378F2d17747657d16B7EEB4bAf2E4a46a94",
+  // FILL AFTER DEPLOY: WiseStakeArtistV2 - the artist mint, priced in
+  // WISE. Artist mints from their own wallet; the WISE fee routes to
+  // treasury in the same call. Supersedes the old ETH-priced mint
+  // (0xEda93378F2d17747657d16B7EEB4bAf2E4a46a94, retired in place).
+  // USD ticker below now reads the live Uniswap pair from DexScreener.
+  WSA_MINT: "",
 
-  // WSC treasury - receives marketplace and scrape fees, plus artist mint
-  // fees. Baked into the contracts at deploy; kept here for display and
-  // reference.
+  // WSC treasury - receives marketplace fees, scrape fees, and artist
+  // mint fees. Baked into the contracts at deploy; kept here for display
+  // and reference.
   TREASURY: "0xA4452c06D9Fe04dD1cEe1f952DE85198d59BfB32",
 
   // WSC-owned wallets. The offeror line: listings from these wallets are
@@ -59,6 +60,6 @@ const CONFIG = {
   BUNDLE_NFT: "",   // WiseBundleNFT - custody bundle engine, receipt = title, scrape + close
   MARKETPLACE: "",  // WiseMarketplace - atomic WISE sales, 2% to treasury, salesOpen gate OFF at deploy
 
-  // USD ticker
-  COINGECKO_ID: "wise-token"
+  // USD ticker source (live Uniswap pair via DexScreener)
+  DEXSCREENER: "https://api.dexscreener.com/latest/dex/tokens/"
 };
