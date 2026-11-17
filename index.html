@@ -109,6 +109,19 @@ footer a{color:var(--gold2);text-decoration:none}
     <div class="panel">
       <h3>Bundles - born as NFTs</h3>
       <p class="note">A bundle combines up to two of three things: a Signature Stake, a vault position, or your minted NFT as the rider. In this dapp the bundle IS an NFT - which is what makes it tradable on the Marketplace tab with zero handshakes.</p>
+      <div class="panel" style="background:var(--navy2);margin-top:16px">
+        <h3>Referral rail - whose name is on the teaching</h3>
+        <p class="note">Every stake and bundle created through this dapp carries a referrer of record - the person who taught the saver. Pick a rail and it sticks in this browser. Rail owners have their own front door: <a id="railLink" href="#" style="color:var(--gold2);word-break:break-all"></a> - anyone opening that link lands with the rail pre-set.</p>
+        <label for="railSel">Referral rail</label>
+        <select id="railSel"></select>
+        <div id="railCustom" class="hidden">
+          <label for="railCustomVal">Custom address or ENS</label>
+          <input type="text" id="railCustomVal" placeholder="0x... or someone.eth">
+        </div>
+        <button class="ghost" id="railSave">Save rail</button>
+        <div class="status" id="railStatus"></div>
+        <p class="note" style="margin-top:8px">WISE rule: a rail earns referral interest only at Critical Mass - $10,000 USD of referred stakes, valued on each stake's creation day. Stakes referred before that never earn retroactively.</p>
+      </div>
       <div class="grid" id="bundleGrid"><p class="note">Bundle contract deploys with the marketplace - see the deploy guide. Until then, bundles live on the <a href="https://wisestake.consulting/app/" style="color:var(--gold2)">Console</a>.</p></div>
     </div>
   </section>

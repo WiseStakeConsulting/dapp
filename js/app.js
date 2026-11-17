@@ -5,7 +5,7 @@ const A = CONFIG;
 let provider, signer, account;
 
 const ABI_MINT = ["function mint(string) payable returns (uint256)","function mintFee() view returns (uint256)"];
-const ABI_721 = ["function balanceOf(address) view returns (uint256)","function tokenOfOwnerByIndex(address,uint256) view returns (uint256)","function walletOfOwner(address) view returns (uint256[])","function ownerOf(uint256) view returns (address)","function setApprovalForAll(address,bool)","function isApprovedForAll(address,address) view returns (bool)","function name() view returns (string)"];
+const ABI_721 = ["function balanceOf(address) view returns (uint256)","function tokenOfOwnerByIndex(address,uint256) view returns (uint256)","function walletOfOwner(address) view returns (uint256[])","function ownerOf(uint256) view returns (address)","function setApprovalForAll(address,bool)","function isApprovedForAll(address,address) view returns (bool)","function transferFrom(address,address,uint256)","function name() view returns (string)"];
 const ABI_20 = ["function balanceOf(address) view returns (uint256)","function approve(address,uint256) returns (bool)","function allowance(address,address) view returns (uint256)","function decimals() view returns (uint8)","function symbol() view returns (string)"];
 const ABI_MKT = ["function list(address,uint256,uint256)","function cancel(address,uint256)","function buy(address,uint256)","function listings(address,uint256) view returns (address,uint256,bool)","function feeBps() view returns (uint16)","function treasury() view returns (address)"];
 
@@ -55,6 +55,82 @@ document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
     if (p) $("priceTag").innerHTML = "WISE <b>$" + p.toLocaleString(undefined,{maximumFractionDigits:2}) + "</b>";
   } catch (e) {}
 })();
+
+// ---------- referral rail ----------
+// The rail is the referrer of record on stakes and bundles created here.
+// A rail owner shares their own front door: dapp URL + ?rail=<ens-or-address>
+// presets it for the visitor, so her people route to her without anyone
+// changing code. The choice persists in this browser.
+let rail = { address: "", label: "", custom: false };
+
+function railMatch(v) {
+  v = (v || "").trim().toLowerCase();
+  if (!v) return -1;
+  return A.RAILS.findIndex(r => r.address.toLowerCase() === v || r.label.toLowerCase().split(" ")[0] === v);
+}
+
+function initRail() {
+  const q = new URLSearchParams(location.search).get("rail");
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem("ws_rail")); } catch (e) {}
+  const i = railMatch(q);
+  if (i >= 0) {
+    rail = { address: A.RAILS[i].address, label: A.RAILS[i].label.split(" ")[0], custom: false };
+  } else if (saved && saved.address) {
+    rail = saved;
+  } else {
+    rail = { address: A.RAILS[0].address, label: A.RAILS[0].label.split(" ")[0], custom: false };
+  }
+}
+
+function renderRail() {
+  const sel = $("railSel");
+  sel.innerHTML = "";
+  A.RAILS.forEach((r, i) => {
+    const o = document.createElement("option");
+    o.value = String(i);
+    o.textContent = r.label;
+    sel.appendChild(o);
+  });
+  const oc = document.createElement("option");
+  oc.value = "custom";
+  oc.textContent = "Custom - address or ENS";
+  sel.appendChild(oc);
+
+  if (rail.custom) {
+    sel.value = "custom";
+    $("railCustom").classList.remove("hidden");
+    $("railCustomVal").value = rail.label.endsWith(".eth") ? rail.label : rail.address;
+  } else {
+    const i = A.RAILS.findIndex(r => r.address.toLowerCase() === rail.address.toLowerCase());
+    sel.value = String(Math.max(i, 0));
+    $("railCustom").classList.add("hidden");
+  }
+  const share = location.origin + location.pathname + "?rail=" + (rail.custom ? rail.address : rail.label);
+  $("railLink").textContent = share;
+  $("railLink").href = share;
+}
+
+async function saveRail() {
+  const sel = $("railSel");
+  const s = $("railStatus");
+  if (sel.value === "custom") {
+    let v = $("railCustomVal").value.trim();
+    if (!v) { s.className = "status err"; s.textContent = "Enter an address or ENS first."; return; }
+    try {
+      if (v.endsWith(".eth") && provider) { const a = await provider.resolveName(v); if (a) v = a; }
+    } catch (e) {}
+    if (!/^0x[0-9a-fA-F]{40}$/.test(v)) { s.className = "status err"; s.textContent = "That is not a valid address or ENS."; return; }
+    rail = { address: v, label: $("railCustomVal").value.trim(), custom: true };
+  } else {
+    const r = A.RAILS[Number(sel.value)];
+    rail = { address: r.address, label: r.label.split(" ")[0], custom: false };
+  }
+  localStorage.setItem("ws_rail", JSON.stringify(rail));
+  renderRail();
+  s.className = "status ok";
+  s.textContent = "Rail set: " + rail.label + (rail.custom ? " (custom)" : "");
+}
 
 // ---------- mint ----------
 async function loadFee() {
@@ -108,7 +184,7 @@ async function loadPositions() {
       if (bal.gt(0)) add(v.name, "Holdings: " + fmt(bal) + " receipts - a live USDC-backed position", "YIELD");
     } catch (e) {}
   }
-  if (!g.children.length) g.innerHTML = "<p class='note'>No yield positions found in this wallet yet. Mint a stake through Wise Soft (referral rail: " + A.REFERRER_LABEL + ") or fund a vault, then refresh.</p>";
+  if (!g.children.length) g.innerHTML = "<p class='note'>No yield positions found in this wallet yet. Start a stake through Wise Soft (rail: " + rail.label + ") or fund a vault, then refresh.</p>";
 }
 
 // ---------- marketplace ----------
@@ -163,3 +239,11 @@ async function doBuy() {
     await tx.wait(); s.className = "status ok"; s.textContent = "Bought. The token is yours - atomically.";
   } catch (e) { s.className = "status err"; s.textContent = "Buy failed: " + e.message.slice(0,120); }
 }
+
+// ---------- boot ----------
+initRail();
+renderRail();
+$("railSel").addEventListener("change", () => {
+  $("railCustom").classList.toggle("hidden", $("railSel").value !== "custom");
+});
+$("railSave").addEventListener("click", saveRail);

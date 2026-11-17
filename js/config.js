@@ -1,5 +1,5 @@
 // Wise Stake dapp configuration.
-// Addresses verified on-chain Nov 2025-2026. Fill the three EMPTY strings after
+// Addresses verified on-chain Nov 2025-2026. Fill the two EMPTY strings after
 // deploying the contracts (see DEPLOY.md), commit, done.
 
 const CONFIG = {
@@ -24,11 +24,17 @@ const CONFIG = {
   // contract at deploy; kept here for display and reference.
   TREASURY: "0xA4452c06D9Fe04dD1cEe1f952DE85198d59BfB32",
 
-  // Default referrer rail for stake creation routed through Wise Soft.
-  // Flip to Denise's rail (0x84EBf885B2655e8be3D3492ca81DFaCad04B5e7f /
-  // wisestakes.eth) by changing these two lines.
-  REFERRER: "0x142A534C60e16695cfE2aBab86f8DEcb85d568c0", // wisestake.eth (English rail)
-  REFERRER_LABEL: "wisestake.eth",
+  // Referral rails - whose rail earns on referred stakes. Anyone creating a
+  // stake or bundle picks a rail in the dapp. Rail owners share their own
+  // front door: add ?rail=<ens-or-address> to the dapp URL and it presets
+  // that rail for the visitor (e.g. ...?rail=wisestakes.eth).
+  // REMINDER (WISE rules): a referrer earns only after Critical Mass -
+  // $10,000 USD of referred stakes, valued at each stake's creation day.
+  // Stakes referred before reaching $10k never earn retroactively.
+  RAILS: [
+    { label: "wisestake.eth (English rail)", address: "0x142A534C60e16695cfE2aBab86f8DEcb85d568c0" },
+    { label: "wisestakes.eth (Denise's rail)", address: "0x84EBf885B2655e8be3D3492ca81DFaCad04B5e7f" }
+  ],
   WISESOFT_REFERRAL_URL: "https://wisesoft.io/", // route fresh deposits through referral first
 
   // FILL AFTER DEPLOY (DEPLOY.md walks through it):
