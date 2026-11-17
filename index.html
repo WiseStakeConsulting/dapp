@@ -85,15 +85,17 @@ footer a{color:var(--gold2);text-decoration:none}
   <!-- MINT -->
   <section id="tab-mint">
     <div class="panel">
-      <h3>Mint from your own wallet</h3>
-      <p class="note">The Wise Stake Artist collection - minted by YOU, owned by YOU from block one. Flat fee in ETH, shown below. Full studio (files, story, certificate) lives on the website; this is the one-button version.</p>
+      <h3>Mint from your own wallet - priced in WISE</h3>
+      <p class="note">The Wise Stake Artist collection - minted by YOU, owned by YOU from block one. The fee is paid in WISE and goes straight to the studio treasury. Gas is still ETH (Ethereum's own toll) - the Swap tab loads you up on both.</p>
+      <p class="note" style="margin-top:12px;border-left:2px solid var(--gold);padding-left:12px">Wise Stake runs on WISE, so the mint does too. WISE is the token that carries everything here: stakes pay in it, the marketplace prices in it, and bundles exist to move it. Paying your mint fee in WISE keeps the whole loop inside one economy - the artist's work, the collector's position, and the protocol's daily interest all speak the same currency. No card processors, no banks in the middle, no conversion games: you hold WISE, you mint with WISE, and every fee the studio collects goes straight back into the same token the community stakes. Gas still runs on ETH - that's Ethereum's own toll - but the price of your work is set in WISE, plain and simple.</p>
       <label for="mintTitle">Title of the work</label>
-      <input type="text" id="mintTitle" placeholder="e.g. Autumn in Ossining">
+      <input type="text" id="mintTitle" maxlength="64" placeholder="e.g. Autumn in Ossining">
       <div class="feebox" style="background:var(--navy);border:1px solid var(--gold);border-radius:12px;padding:14px 18px;margin-top:14px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">
-        <small class="note">Mint fee (the whole bill - gas shown by your wallet before you sign)</small>
+        <small class="note">Mint fee in WISE (plus gas, shown by your wallet before you sign)</small>
         <span id="feeDisplay" style="font-size:1.3rem;color:var(--gold2)">-</span>
       </div>
-      <button class="gold" id="mintBtn" onclick="doMint()" disabled>Mint My Work</button>
+      <button class="gold" id="mintApproveBtn" onclick="bMintApprove()" disabled>1. Approve WISE</button>
+      <button class="gold" id="mintBtn" onclick="doMint()" disabled>2. Mint My Work</button>
       <div class="status" id="mintStatus"></div>
       <p class="note" style="margin-top:10px">Want the full white-glove studio (five captures, story, certificate line)? <a href="https://wisestake.consulting/mint/" style="color:var(--gold2)">Open the Mint Studio &rarr;</a></p>
     </div>
