@@ -57,10 +57,10 @@ document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
 })();
 
 // ---------- referral rail ----------
-// The rail is the referrer of record on stakes and bundles created here.
-// A rail owner shares their own front door: dapp URL + ?rail=<ens-or-address>
-// presets it for the visitor, so her people route to her without anyone
-// changing code. The choice persists in this browser.
+// The rail is whose referral door a stake goes through. Known rails open
+// their own pro.wise.one/r/ link (10% referral bonus shows on arrival);
+// custom rails use Wise One's "I want to use team referral address" selector.
+// A rail owner shares ?rail=<ens-or-address> on the dapp URL to preset it.
 let rail = { address: "", label: "", custom: false };
 
 function railMatch(v) {
@@ -109,6 +109,14 @@ function renderRail() {
   const share = location.origin + location.pathname + "?rail=" + (rail.custom ? rail.address : rail.label);
   $("railLink").textContent = share;
   $("railLink").href = share;
+}
+
+function railDoor() {
+  if (!rail.custom) {
+    const r = A.RAILS.find(x => x.address.toLowerCase() === rail.address.toLowerCase());
+    if (r && r.url) return r.url;
+  }
+  return A.STAKE_BASE; // custom rail: use Wise One's team-referral-address selector
 }
 
 async function saveRail() {
@@ -184,7 +192,7 @@ async function loadPositions() {
       if (bal.gt(0)) add(v.name, "Holdings: " + fmt(bal) + " receipts - a live USDC-backed position", "YIELD");
     } catch (e) {}
   }
-  if (!g.children.length) g.innerHTML = "<p class='note'>No yield positions found in this wallet yet. Start a stake through Wise Soft (rail: " + rail.label + ") or fund a vault, then refresh.</p>";
+  if (!g.children.length) g.innerHTML = "<p class='note'>No Signature Stakes or vault receipts found in this wallet. Starting a stake? Use the Bundles tab pre-flight and turn ON transferable - only Signature Stakes can be bundled or sold here.</p>";
 }
 
 // ---------- marketplace ----------
@@ -247,3 +255,4 @@ $("railSel").addEventListener("change", () => {
   $("railCustom").classList.toggle("hidden", $("railSel").value !== "custom");
 });
 $("railSave").addEventListener("click", saveRail);
+$("railStakeBtn").addEventListener("click", () => window.open(railDoor(), "_blank", "noopener"));
