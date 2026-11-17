@@ -9,10 +9,12 @@ const ABI_721 = ["function balanceOf(address) view returns (uint256)","function 
 const ABI_20 = ["function balanceOf(address) view returns (uint256)","function approve(address,uint256) returns (bool)","function allowance(address,address) view returns (uint256)","function decimals() view returns (uint8)","function symbol() view returns (string)"];
 const ABI_MKT = ["function list(address,uint256,uint256)","function cancel(address,uint256)","function buy(address,uint256)","function listings(address,uint256) view returns (address,uint256,bool)","function feeBps() view returns (uint16)","function treasury() view returns (address)","function salesOpen() view returns (bool)"];
 const ABI_SOON = ["function signal(address,uint256)","function withdraw(address,uint256)","function collectionCount() view returns (uint256)","function tokensSignaled(address) view returns (uint256[])","function isActive(address,uint256) view returns (bool)","function signals(address,uint256) view returns (address,uint256,bool)"];
+const ABI_BUNDLE = ["function wrapCard(uint256,address,uint256,address,uint16,address,string) returns (uint256)","function wrapVault(address,uint256,address,uint16,address,string) returns (uint256)","function attachVault(uint256,address,uint256)","function scrape(uint256,uint64)","function scrapeVault(uint256)","function compoundVault(uint256)","function closeBundle(uint256)","function setArt(uint256,string)","function bundleInfo(uint256) view returns (uint256,address,uint256,address,uint256,address,uint16,bool)","function bundleMeta(uint256) view returns (address,string,string)","function balanceOf(address) view returns (uint256)","function ownerOf(uint256) view returns (address)","function setApprovalForAll(address,bool)","function isApprovedForAll(address,address) view returns (bool)","function feeBps() view returns (uint16)","function nextId() view returns (uint256)"];
 
 const $ = id => document.getElementById(id);
 const fmt = ethers.utils.formatEther;
 const short = a => a ? a.slice(0,6) + "..." + a.slice(-4) : "";
+const ZERO = ethers.constants.AddressZero;
 const isWscWallet = a => a && A.WSC_WALLETS.some(w => w.toLowerCase() === a.toLowerCase());
 
 // ---------- wallet ----------
@@ -34,6 +36,8 @@ async function connect() {
     loadFee();
     checkMarketGate();
     loadDirectory();
+    loadBundles();
+    loadBundleForm();
   } catch (e) { console.error(e); }
 }
 
@@ -49,6 +53,7 @@ document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
   }
   if (b.dataset.tab === "positions" && account) loadPositions();
   if (b.dataset.tab === "directory" && provider) loadDirectory();
+  if (b.dataset.tab === "bundles" && provider) { loadBundles(); loadBundleForm(); }
 });
 
 // ---------- USD ticker ----------
@@ -62,10 +67,6 @@ document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
 })();
 
 // ---------- referral rail ----------
-// The rail is whose referral door a stake goes through. The door link
-// carries the referral credit (10% bonus shows on arrival), so visitors
-// leave Wise One's team referral address field blank. A rail owner shares
-// ?rail=<ens-or-address> on the dapp URL to preset it for their people.
 let rail = { address: "", label: "", custom: false };
 
 function railMatch(v) {
@@ -198,6 +199,220 @@ async function loadPositions() {
     } catch (e) {}
   }
   if (!g.children.length) g.innerHTML = "<p class='note'>No Signature Stakes or vault receipts found in this wallet. Starting a stake? Use the Bundles tab pre-flight and turn ON transferable - only Signature Stakes can be bundled or sold here.</p>";
+}
+
+// ---------- bundle engine ----------
+// The bundle takes CUSTODY of what you already hold (stake card, optional
+// rider NFT, vault receipts) and mints ONE receipt NFT as the title. The
+// receipt holder scrapes yield - patron share paid automatically. Selling
+// or moving the receipt moves the whole bundle, atomically. Closing
+// returns every component and burns the receipt. The referrer recorded
+// on the bundle is the rail picked above.
+function bundleReady() { return !!A.BUNDLE_NFT; }
+
+async function loadBundles() {
+  const g = $("bundleGrid");
+  if (!bundleReady()) {
+    g.innerHTML = "<p class='note'>The bundle engine is not deployed yet - see DEPLOY.md. When it is, your bundles appear here: create, scrape, compound, close - all from this page.</p>";
+    return;
+  }
+  if (!provider || !account) { g.innerHTML = "<p class='note'>Connect your wallet to read your bundles.</p>"; return; }
+  g.innerHTML = "";
+  const b = new ethers.Contract(A.BUNDLE_NFT, ABI_BUNDLE, provider);
+  const n = (await b.nextId()).toNumber();
+  const fee = await b.feeBps();
+  let count = 0;
+  for (let i = 1; i < n; i++) {
+    let holder; try { holder = await b.ownerOf(i); } catch (e) { continue; }
+    if (holder.toLowerCase() !== account.toLowerCase()) continue;
+    count++;
+    const info = await b.bundleInfo(i);
+    const meta = await b.bundleMeta(i);
+    const parts = [];
+    if (info[0].gt(0)) parts.push("Signature Stake card #" + info[0].toString());
+    if (info[1] !== ZERO) parts.push("Rider NFT #" + info[2].toString() + " (" + short(info[1]) + ")");
+    if (info[3] !== ZERO) parts.push(fmt(info[4]) + " vault receipts (" + short(info[3]) + ")");
+    const patronTxt = info[5] === ZERO ? "none - all yield to holder" : short(info[5]) + " at " + (info[6] / 100) + "%";
+    const d = document.createElement("div"); d.className = "card";
+    d.innerHTML = "<h4>Bundle #" + i + (meta[1] ? " - " + meta[1] : "") + "</h4>" +
+      "<p class='sub'>" + parts.join(" + ") + "</p>" +
+      "<p class='sub'>Patron: " + patronTxt +
+      (meta[0] !== ZERO ? " &middot; Referrer: " + short(meta[0]) : "") +
+      " &middot; WSC scrape fee: " + (fee / 100) + "%</p>" +
+      (meta[2] ? "<img src='" + meta[2] + "' alt='bundle art' style='max-width:100%;border-radius:8px;margin-top:8px'>" : "") +
+      "<span class='tag'>ACTIVE</span><br>" +
+      (info[0].gt(0) ? "<button class='ghost' onclick=\"doScrape(" + i + ")\">Scrape stake</button> " : "") +
+      (info[3] !== ZERO ? "<button class='ghost' onclick=\"doScrapeVault(" + i + ")\">Scrape vault</button> <button class='ghost' onclick=\"doCompoundVault(" + i + ")\">Compound vault</button> " : "") +
+      "<button class='ghost' onclick=\"doCloseBundle(" + i + ")\">Close bundle</button>" +
+      "<input type='text' id='art" + i + "' placeholder='Art URL (optional)' style='margin-top:8px'>" +
+      "<button class='ghost' onclick=\"doSetArt(" + i + ")\">Set art</button>" +
+      "<div class='status' id='bstat" + i + "'></div>";
+    g.appendChild(d);
+  }
+  if (!count) g.innerHTML = "<p class='note'>No bundles yet. Create one below - your positions move into the bundle's custody and the receipt NFT becomes the title. Close it any time to get every piece back.</p>";
+}
+
+async function loadBundleForm() {
+  if (!provider || !account) return;
+  const sel = $("cbCard"); sel.innerHTML = "";
+  try {
+    const sig = new ethers.Contract(A.SIG_STAKES, ABI_721, provider);
+    const ids = await sig.walletOfOwner(account);
+    ids.forEach(id => {
+      const o = document.createElement("option");
+      o.value = id.toString();
+      o.textContent = "Card #" + id.toString();
+      sel.appendChild(o);
+    });
+  } catch (e) {}
+  if (!sel.children.length) sel.innerHTML = "<option value=''>No Signature Stakes in this wallet</option>";
+  const vsel = $("wvVault"); vsel.innerHTML = "";
+  A.VAULTS.forEach(v => {
+    const o = document.createElement("option");
+    o.value = v.address; o.textContent = v.name;
+    vsel.appendChild(o);
+  });
+}
+
+async function bApproveCard() {
+  if (!signer) return alert("Connect your wallet first.");
+  const s = $("cbStatus"); s.className = "status wait"; s.textContent = "Approving Signature Stakes for the bundle engine...";
+  try {
+    const c = new ethers.Contract(A.SIG_STAKES, ABI_721, signer);
+    const tx = await c.setApprovalForAll(A.BUNDLE_NFT, true);
+    await tx.wait(); s.className = "status ok"; s.textContent = "Card approved. Rider next (if any), then Wrap."
+  } catch (e) { s.className = "status err"; s.textContent = "Approve failed: " + e.message.slice(0, 120); }
+}
+
+async function bApproveRider() {
+  if (!signer) return alert("Connect your wallet first.");
+  const col = $("cbRider").value.trim();
+  if (!col) { alert("Enter the rider collection address first (or leave the rider out)."); return; }
+  const s = $("cbStatus"); s.className = "status wait"; s.textContent = "Approving rider collection...";
+  try {
+    const c = new ethers.Contract(col, ABI_721, signer);
+    const tx = await c.setApprovalForAll(A.BUNDLE_NFT, true);
+    await tx.wait(); s.className = "status ok"; s.textContent = "Rider approved. Now Wrap."
+  } catch (e) { s.className = "status err"; s.textContent = "Approve failed: " + e.message.slice(0, 120); }
+}
+
+async function bWrapCard() {
+  if (!signer) return alert("Connect your wallet first.");
+  if (!bundleReady()) return alert("Bundle engine not deployed yet (DEPLOY.md).");
+  const s = $("cbStatus"); s.className = "status wait";
+  try {
+    const c = new ethers.Contract(A.BUNDLE_NFT, ABI_BUNDLE, signer);
+    const cardId = $("cbCard").value.trim();
+    if (!cardId) { s.className = "status err"; s.textContent = "No stake card selected."; return; }
+    const rider = $("cbRider").value.trim();
+    const riderId = $("cbRiderId").value.trim() || "0";
+    let patron = $("cbPatron").value.trim();
+    if (patron.endsWith(".eth") && provider) { const r = await provider.resolveName(patron); if (r) patron = r; }
+    const bps = $("cbBps").value;
+    const label = $("cbLabel").value.trim() || "My bundle";
+    s.textContent = "Confirm in your wallet...";
+    const tx = await c.wrapCard(cardId, rider || ZERO, riderId, patron || ZERO, bps, rail.address, label);
+    await tx.wait();
+    s.className = "status ok"; s.textContent = "Bundle created. Your card (and rider) are in custody; the receipt NFT is the title.";
+    loadBundles();
+  } catch (e) { s.className = "status err"; s.textContent = "Wrap failed: " + e.message.slice(0, 120); }
+}
+
+async function bApproveVault() {
+  if (!signer) return alert("Connect your wallet first.");
+  const s = $("wvStatus"); s.className = "status wait"; s.textContent = "Approving vault receipts...";
+  try {
+    const c = new ethers.Contract($("wvVault").value, ABI_20, signer);
+    const tx = await c.approve(A.BUNDLE_NFT, ethers.constants.MaxUint256);
+    await tx.wait(); s.className = "status ok"; s.textContent = "Vault receipts approved. Now Wrap."
+  } catch (e) { s.className = "status err"; s.textContent = "Approve failed: " + e.message.slice(0, 120); }
+}
+
+async function bWrapVault() {
+  if (!signer) return alert("Connect your wallet first.");
+  if (!bundleReady()) return alert("Bundle engine not deployed yet (DEPLOY.md).");
+  const s = $("wvStatus"); s.className = "status wait";
+  try {
+    const c = new ethers.Contract(A.BUNDLE_NFT, ABI_BUNDLE, signer);
+    const amount = $("wvAmount").value.trim();
+    if (!amount || Number(amount) <= 0) { s.className = "status err"; s.textContent = "Enter a receipt amount."; return; }
+    let patron = $("wvPatron").value.trim();
+    if (patron.endsWith(".eth") && provider) { const r = await provider.resolveName(patron); if (r) patron = r; }
+    const label = $("wvLabel").value.trim() || "My vault bundle";
+    s.textContent = "Confirm in your wallet...";
+    const tx = await c.wrapVault($("wvVault").value, amount, patron || ZERO, $("wvBps").value, rail.address, label);
+    await tx.wait();
+    s.className = "status ok"; s.textContent = "Vault bundle created. The receipts are in custody; the receipt NFT is the title.";
+    loadBundles();
+  } catch (e) { s.className = "status err"; s.textContent = "Wrap failed: " + e.message.slice(0, 120); }
+}
+
+async function doScrape(id) {
+  if (!signer) return alert("Connect your wallet first.");
+  const days = prompt("Days of yield to scrape (capped automatically at what's available):", "1");
+  if (!days) return;
+  const s = $("bstat" + id); s.className = "status wait";
+  try {
+    const c = new ethers.Contract(A.BUNDLE_NFT, ABI_BUNDLE, signer);
+    s.textContent = "Confirm in your wallet...";
+    const tx = await c.scrape(id, days);
+    await tx.wait();
+    s.className = "status ok"; s.textContent = "Scraped. Split paid: patron share + holder share, WSC fee off the top.";
+  } catch (e) { s.className = "status err"; s.textContent = "Scrape failed: " + e.message.slice(0, 120); }
+}
+
+async function doScrapeVault(id) {
+  if (!signer) return alert("Connect your wallet first.");
+  const s = $("bstat" + id); s.className = "status wait";
+  try {
+    const c = new ethers.Contract(A.BUNDLE_NFT, ABI_BUNDLE, signer);
+    s.textContent = "Confirm in your wallet...";
+    const tx = await c.scrapeVault(id);
+    await tx.wait();
+    s.className = "status ok"; s.textContent = "Vault interest claimed and split (paid in the deposit asset, e.g. USDC).";
+  } catch (e) { s.className = "status err"; s.textContent = "Vault scrape failed: " + e.message.slice(0, 120); }
+}
+
+async function doCompoundVault(id) {
+  if (!signer) return alert("Connect your wallet first.");
+  const s = $("bstat" + id); s.className = "status wait";
+  try {
+    const c = new ethers.Contract(A.BUNDLE_NFT, ABI_BUNDLE, signer);
+    s.textContent = "Confirm in your wallet...";
+    const tx = await c.compoundVault(id);
+    await tx.wait();
+    s.className = "status ok"; s.textContent = "Compounded - accrued interest converted into more receipt principal.";
+    loadBundles();
+  } catch (e) { s.className = "status err"; s.textContent = "Compound failed: " + e.message.slice(0, 120); }
+}
+
+async function doCloseBundle(id) {
+  if (!signer) return alert("Connect your wallet first.");
+  if (!confirm("Close Bundle #" + id + "? Every component (stake card, rider, vault receipts) returns to your wallet and the receipt NFT is burned. The stake itself is untouched - it keeps earning in your wallet.")) return;
+  const s = $("bstat" + id); s.className = "status wait";
+  try {
+    const c = new ethers.Contract(A.BUNDLE_NFT, ABI_BUNDLE, signer);
+    s.textContent = "Confirm in your wallet...";
+    const tx = await c.closeBundle(id);
+    await tx.wait();
+    s.className = "status ok"; s.textContent = "Bundle closed. Components returned, receipt burned.";
+    loadBundles();
+  } catch (e) { s.className = "status err"; s.textContent = "Close failed: " + e.message.slice(0, 120); }
+}
+
+async function doSetArt(id) {
+  if (!signer) return alert("Connect your wallet first.");
+  const uri = $("art" + id).value.trim();
+  if (!uri) { alert("Paste an art URL first (pin an image, or host it in the dapp repo's /art/ folder)."); return; }
+  const s = $("bstat" + id); s.className = "status wait";
+  try {
+    const c = new ethers.Contract(A.BUNDLE_NFT, ABI_BUNDLE, signer);
+    s.textContent = "Confirm in your wallet...";
+    const tx = await c.setArt(id, uri);
+    await tx.wait();
+    s.className = "status ok"; s.textContent = "Art set - it now shows on the bundle and in its metadata.";
+    loadBundles();
+  } catch (e) { s.className = "status err"; s.textContent = "Set art failed: " + e.message.slice(0, 120); }
 }
 
 // ---------- directory (Coming Soon) ----------
