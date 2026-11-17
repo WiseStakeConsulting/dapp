@@ -57,10 +57,10 @@ document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
 })();
 
 // ---------- referral rail ----------
-// The rail is whose referral door a stake goes through. Known rails open
-// their own pro.wise.one/r/ link (10% referral bonus shows on arrival);
-// custom rails use Wise One's "I want to use team referral address" selector.
-// A rail owner shares ?rail=<ens-or-address> on the dapp URL to preset it.
+// The rail is whose referral door a stake goes through. The door link
+// carries the referral credit (10% bonus shows on arrival), so visitors
+// leave Wise One's team referral address field blank. A rail owner shares
+// ?rail=<ens-or-address> on the dapp URL to preset it for their people.
 let rail = { address: "", label: "", custom: false };
 
 function railMatch(v) {
@@ -116,7 +116,7 @@ function railDoor() {
     const r = A.RAILS.find(x => x.address.toLowerCase() === rail.address.toLowerCase());
     if (r && r.url) return r.url;
   }
-  return A.STAKE_BASE; // custom rail: use Wise One's team-referral-address selector
+  return A.STAKE_BASE;
 }
 
 async function saveRail() {

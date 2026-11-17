@@ -27,11 +27,11 @@ const CONFIG = {
   TREASURY: "0xA4452c06D9Fe04dD1cEe1f952DE85198d59BfB32",
 
   // Referral rails - whose name is on the teaching. Stakes are created in
-  // Wise One through the rail's referral door; the dapp shows the pre-flight
-  // (turn ON "I prefer this stake to be transferable") before sending anyone
-  // through. Rail owners share ?rail=<ens-or-address> on the dapp URL.
-  // For custom rails, Wise One's own "I want to use team referral address"
-  // selector in the stake form takes the address manually.
+  // Wise One through the rail's referral door; the door link carries the
+  // referral credit, so visitors leave Wise One's team referral address
+  // field BLANK. The dapp shows the pre-flight (blank field + turn ON
+  // "I prefer this stake to be transferable") before sending anyone through.
+  // Rail owners share ?rail=<ens-or-address> on the dapp URL.
   // REMINDER (WISE rules): a referrer earns only after Critical Mass -
   // $10,000 USD of referred stakes, valued at each stake's creation day.
   // Stakes referred before reaching $10k never earn retroactively.
@@ -39,7 +39,7 @@ const CONFIG = {
     { label: "wisestake.eth (English rail)", address: "0x142A534C60e16695cfE2aBab86f8DEcb85d568c0", url: "https://pro.wise.one/r/wisestake.eth" },
     { label: "wisestakes.eth (Denise's rail)", address: "0x84EBf885B2655e8be3D3492ca81DFaCad04B5e7f", url: "https://pro.wise.one/r/wisestakes.eth" }
   ],
-  STAKE_BASE: "https://pro.wise.one/", // custom rails: enter team referral address in Wise One's form
+  STAKE_BASE: "https://pro.wise.one/", // custom rails ride the generic door; credit comes from the dapp rail pick
 
   // FILL AFTER DEPLOY (DEPLOY.md walks through it):
   POSITION_NFT: "", // WisePositionNFT - yield-bearing position receipts
