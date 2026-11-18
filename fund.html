@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Legal Fund - Wise Stake Dapp</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="wsc-logo.png">
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<style>
+:root{--navy:#0a1128;--navy2:#101a3a;--panel:#0d1733;--gold:#d4a13a;--gold2:#e8c15a;--cream:#f5efe0;--muted:#9aa5c0;--line:rgba(232,193,90,.18)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--navy);color:var(--cream);font-family:Georgia,'Times New Roman',serif;line-height:1.7;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:40px 24px 80px}
+.eyebrow{color:var(--gold);text-transform:uppercase;letter-spacing:.22em;font-size:.72rem;font-family:'Helvetica Neue',Arial,sans-serif}
+h1{font-size:2.2rem;font-weight:400;margin:10px 0 6px}
+h2{font-weight:400;font-size:1.2rem;color:var(--gold2);margin-bottom:8px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;margin-top:18px}
+.note{font-family:'Helvetica Neue',Arial,sans-serif;font-size:.88rem;color:var(--muted)}
+.pot{background:var(--navy2);border:1px solid var(--gold);border-radius:14px;padding:20px;margin-top:14px}
+.balance{font-size:1.6rem;color:var(--gold2)}
+.balance small{font-size:.9rem;color:var(--muted)}
+.addr{font-family:monospace;font-size:.78rem;color:var(--muted);word-break:break-all}
+button.gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);border:none;border-radius:999px;padding:10px 22px;font-family:'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;margin-top:10px}
+button.ghost{background:none;border:1px solid var(--gold);color:var(--gold2);border-radius:999px;padding:9px 20px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:.82rem;cursor:pointer;margin-top:10px;margin-left:8px}
+footer{border-top:1px solid var(--line);padding:24px 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:.78rem;color:var(--muted)}
+footer a{color:var(--gold2);text-decoration:none}
+</style>
+</head>
+<body>
+<main class="wrap">
+<div class="eyebrow">Wise Stake Consulting &middot; dapp.wisestake.consulting</div>
+<h1>The Legal Fund</h1>
+<p class="note">A young protocol moving real value needs a real attorney. We are raising for professional legal review - the marketplace reliance letter, the terms, the whole walk - before opening more doors. Every mint fee funds it, and direct contributions are welcome.</p>
+
+<div class="panel">
+  <h2>The pot - verifiable by anyone</h2>
+  <p class="note">This is a live on-chain balance, not a number we typed. Check it yourself on any block explorer:</p>
+  <div class="pot">
+    <div class="balance"><span id="wiseBal">reading...</span> <small>WISE</small></div>
+    <div class="balance" style="font-size:1.1rem;margin-top:6px"><span id="ethBal">...</span> <small>ETH</small></div>
+    <p class="addr" style="margin-top:12px" id="potAddr"></p>
+    <button class="gold" onclick="copyAddr()">Copy pot address</button>
+    <button class="ghost" id="exploreLink" target="_blank" rel="noopener">Verify on Blockscout &rarr;</button>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>How to put in</h2>
+  <p class="note"><b>Mint during the grand opening.</b> The $5 mint fee goes to the treasury - the same pot - so every supporter who mints is funding the lawyer too. That is the whole idea: the community builds its own protections.</p>
+  <p class="note" style="margin-top:10px"><b>Or contribute directly.</b> Send WISE or ETH to the pot address above from any wallet. Every contribution is a public transaction anyone can audit, forever.</p>
+</div>
+
+<div class="panel">
+  <h2>The honest fine print</h2>
+  <p class="note">Contributions are not investments: they buy no tokens, carry no return, and give no claim on Wise Stake Consulting LLC. Funds are spent at WSC's discretion on legal and compliance costs. Contributions are not tax-deductible. Pot address shown is the WSC treasury, which also receives marketplace and mint fees; a dedicated legal-fund wallet may replace it as the fund grows.</p>
+</div>
+</main>
+<footer><div class="wrap"><a href="/">&larr; Back to the dapp</a> &middot; <a href="terms.html">Terms of Use</a> &middot; <a href="copyright.html">Copyright / DMCA</a></div></footer>
+<script>
+const POT="0xA4452c06D9Fe04dD1cEe1f952DE85198d59BfB32";
+const WISE="0x66a0f676479Cee1d7373f3DC2e2952778BfF5bd6";
+const RPCS=["https://ethereum-rpc.publicnode.com","https://eth.drpc.org","https://eth-mainnet.public.blastapi.io"];
+document.getElementById('potAddr').textContent=POT;
+document.getElementById('exploreLink').href='https://eth.blockscout.com/address/'+POT;
+function copyAddr(){navigator.clipboard.writeText(POT);}
+(async function(){
+  for(const u of RPCS){
+    try{
+      const p=new ethers.providers.JsonRpcProvider(u);
+      const eth=await p.getBalance(POT);
+      const c=new ethers.Contract(WISE,["function balanceOf(address) view returns (uint256)"],p);
+      const w=await c.balanceOf(POT);
+      document.getElementById('ethBal').textContent=parseFloat(ethers.utils.formatEther(eth)).toFixed(4);
+      document.getElementById('wiseBal').textContent=parseFloat(ethers.utils.formatEther(w)).toFixed(2);
+      return;
+    }catch(e){}
+  }
+  document.getElementById('wiseBal').textContent='read error - refresh';
+  document.getElementById('ethBal').textContent='-';
+})();
+</script>
+</body>
+</html>
