@@ -24,7 +24,7 @@ const CONFIG = {
   // treasury in the same call. Supersedes the old ETH-priced mint
   // (0xEda93378F2d17747657d16B7EEB4bAf2E4a46a94, retired in place).
   // USD ticker below now reads the live Uniswap pair from DexScreener.
-  WSA_MINT: "",
+  WSA_MINT: "0x2DE52e2196b603b5D320e1278b36f0ac8bF9E0f7",
 
   // WSC treasury - receives marketplace fees, scrape fees, and artist
   // mint fees. Baked into the contracts at deploy; kept here for display
@@ -55,10 +55,10 @@ const CONFIG = {
   STAKE_BASE: "https://pro.wise.one/", // custom rails ride the generic door; credit comes from the dapp rail pick
 
   // FILL AFTER DEPLOY (DEPLOY.md walks through it):
-  COMING_SOON: "",  // ComingSoon - sell-intent registry, no prices, no offers
-  POSITION_NFT: "", // WisePositionNFT - yield-bearing position receipts
-  BUNDLE_NFT: "",   // WiseBundleNFT - custody bundle engine, receipt = title, scrape + close
-  MARKETPLACE: "",  // WiseMarketplace - atomic WISE sales, 2% to treasury, salesOpen gate OFF at deploy
+  COMING_SOON: "0x82b4165f2E8F60b016e962DF3D91C68344fB2f05",  // ComingSoon - sell-intent registry, no prices, no offers
+  POSITION_NFT: "0x90C4905910FCCAD2c8B94724be44DcA8A258b1BB", // WisePositionNFT - yield-bearing position receipts
+  BUNDLE_NFT: "0x5567582317bA0119aeC614Ed08fC909E06336A69",   // WiseBundleNFT - custody bundle engine, receipt = title, scrape + close
+  MARKETPLACE: "0x96ce39bfEb981B9502EB72F819a40ccADDF9Ccc1",  // WiseMarketplace - atomic WISE sales, 2% to treasury, salesOpen gate OFF at deploy
 
   // USD ticker source (live Uniswap pair via DexScreener)
   DEXSCREENER: "https://api.dexscreener.com/latest/dex/tokens/"
