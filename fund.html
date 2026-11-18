@@ -31,11 +31,11 @@ footer a{color:var(--gold2);text-decoration:none}
 <main class="wrap">
 <div class="eyebrow">Wise Stake Consulting &middot; dapp.wisestake.consulting</div>
 <h1>The Legal Fund</h1>
-<p class="note">A young protocol moving real value needs a real attorney. We are raising for professional legal review - the marketplace reliance letter, the terms, the whole walk - before opening more doors. Every mint fee funds it, and direct contributions are welcome.</p>
+<p class="note">A young protocol moving real value needs a real attorney. We are raising for professional legal review - the marketplace reliance letter, the terms, the whole walk - before opening more doors. Every mint fee funds the legal work, and direct contributions are welcome.</p>
 
 <div class="panel">
   <h2>The pot - verifiable by anyone</h2>
-  <p class="note">This is a live on-chain balance, not a number we typed. Check it yourself on any block explorer:</p>
+  <p class="note">This is a live on-chain balance, not a number we typed. It lives in a dedicated Legal Fund wallet - money goes in for the lawyer and out to the lawyer, and every movement is public. Check it yourself on any block explorer:</p>
   <div class="pot">
     <div class="balance"><span id="wiseBal">reading...</span> <small>WISE</small></div>
     <div class="balance" style="font-size:1.1rem;margin-top:6px"><span id="ethBal">...</span> <small>ETH</small></div>
@@ -47,18 +47,18 @@ footer a{color:var(--gold2);text-decoration:none}
 
 <div class="panel">
   <h2>How to put in</h2>
-  <p class="note"><b>Mint during the grand opening.</b> The $5 mint fee goes to the treasury - the same pot - so every supporter who mints is funding the lawyer too. That is the whole idea: the community builds its own protections.</p>
-  <p class="note" style="margin-top:10px"><b>Or contribute directly.</b> Send WISE or ETH to the pot address above from any wallet. Every contribution is a public transaction anyone can audit, forever.</p>
+  <p class="note"><b>Mint during the grand opening.</b> The $5 mint fee goes to the studio treasury, which funds the protocol's legal work - and the studio moves a share of it into this pot, in public transactions anyone can audit. Every supporter who mints is funding the lawyer too. That is the whole idea: the community builds its own protections.</p>
+  <p class="note" style="margin-top:10px"><b>Or contribute directly.</b> Send WISE or ETH straight to the pot address above from any wallet. Direct contributions skip the middle step and land in the pot itself, publicly, forever.</p>
 </div>
 
 <div class="panel">
   <h2>The honest fine print</h2>
-  <p class="note">Contributions are not investments: they buy no tokens, carry no return, and give no claim on Wise Stake Consulting LLC. Funds are spent at WSC's discretion on legal and compliance costs. Contributions are not tax-deductible. Pot address shown is the WSC treasury, which also receives marketplace and mint fees; a dedicated legal-fund wallet may replace it as the fund grows.</p>
+  <p class="note">Contributions are not investments: they buy no tokens, carry no return, and give no claim on Wise Stake Consulting LLC. Funds are spent at WSC's discretion on legal and compliance costs. Contributions are not tax-deductible. The pot is a dedicated Legal Fund wallet, separate from the WSC operating treasury.</p>
 </div>
 </main>
 <footer><div class="wrap"><a href="/">&larr; Back to the dapp</a> &middot; <a href="terms.html">Terms of Use</a> &middot; <a href="copyright.html">Copyright / DMCA</a></div></footer>
 <script>
-const POT="0xA4452c06D9Fe04dD1cEe1f952DE85198d59BfB32";
+const POT="0xC9a3259eA7f9B830f66cE76655144ABb044aa327";
 const WISE="0x66a0f676479Cee1d7373f3DC2e2952778BfF5bd6";
 const RPCS=["https://ethereum-rpc.publicnode.com","https://eth.drpc.org","https://eth-mainnet.public.blastapi.io"];
 document.getElementById('potAddr').textContent=POT;
