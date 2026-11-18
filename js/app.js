@@ -5,8 +5,9 @@ const A = CONFIG;
 let provider, signer, account;
 let lastWiseUsd = 0; // live USD price from DexScreener (for the fee display)
 
-// Public read node - lets the page read contract state BEFORE any wallet connects.
-const READ_RPCS = ["https://eth.llamarpc.com", "https://rpc.ankr.com/eth", "https://cloudflare-eth.com"];
+// Public read nodes - let the page read contract state BEFORE any wallet
+// connects. Tested Nov 18: all three answer eth_call without an API key.
+const READ_RPCS = ["https://ethereum-rpc.publicnode.com", "https://eth.drpc.org", "https://eth-mainnet.public.blastapi.io"];
 let readProvider = null;
 function bootRead() {
   if (readProvider) return readProvider;
@@ -170,27 +171,28 @@ function usdHint(wiseAmount) {
   return " (~$" + (u >= 10 ? Math.round(u) : u.toFixed(2)) + ")";
 }
 
+function feeText(p) {
+  const wise = fmt(p);
+  $("feeDisplay").textContent = wise + " WISE" + usdHint(wise);
+  $("mintApproveBtn").disabled = false;
+  $("mintBtn").disabled = false;
+}
+
 async function loadFee() {
   if (!mintReady()) { $("feeDisplay").textContent = "deploys with the batch"; return; }
   try {
     const c = new ethers.Contract(A.WSA_MINT, ABI_MINT, bootRead());
     const p = await c.mintPrice();
     if (p.isZero()) { $("feeDisplay").textContent = "mints paused"; return; }
-    const wise = fmt(p);
-    $("feeDisplay").textContent = wise + " WISE" + usdHint(wise);
-    $("mintApproveBtn").disabled = false;
-    $("mintBtn").disabled = false;
+    feeText(p);
   } catch (e) {
-    // try the fallback nodes once before giving up
+    // try the fallback nodes before showing an error
     for (const rpc of READ_RPCS.slice(1)) {
       try {
         const c = new ethers.Contract(A.WSA_MINT, ABI_MINT, new ethers.providers.JsonRpcProvider(rpc));
         const p = await c.mintPrice();
         if (p.isZero()) { $("feeDisplay").textContent = "mints paused"; return; }
-        const wise = fmt(p);
-        $("feeDisplay").textContent = wise + " WISE" + usdHint(wise);
-        $("mintApproveBtn").disabled = false;
-        $("mintBtn").disabled = false;
+        feeText(p);
         return;
       } catch (err) { continue; }
     }
@@ -635,5 +637,5 @@ $("railSel").addEventListener("change", () => {
 });
 $("railSave").addEventListener("click", saveRail);
 $("railStakeBtn").addEventListener("click", () => window.open(railDoor(), "_blank", "noopener"));
-loadFee();      // fee reads through a public node - no wallet needed
+loadFee();       // fee reads through public nodes - no wallet needed
 checkMarketGate(); // gate status also reads before connect
