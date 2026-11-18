@@ -5,6 +5,15 @@ const A = CONFIG;
 let provider, signer, account;
 let lastWiseUsd = 0; // live USD price from DexScreener (for the fee display)
 
+// Public read node - lets the page read contract state BEFORE any wallet connects.
+const READ_RPCS = ["https://eth.llamarpc.com", "https://rpc.ankr.com/eth", "https://cloudflare-eth.com"];
+let readProvider = null;
+function bootRead() {
+  if (readProvider) return readProvider;
+  readProvider = new ethers.providers.JsonRpcProvider(READ_RPCS[0]);
+  return readProvider;
+}
+
 const ABI_MINT = ["function mint(string) returns (uint256)","function mintPrice() view returns (uint256)","function owner() view returns (address)"];
 const ABI_721 = ["function balanceOf(address) view returns (uint256)","function tokenOfOwnerByIndex(address,uint256) view returns (uint256)","function walletOfOwner(address) view returns (uint256[])","function ownerOf(uint256) view returns (address)","function setApprovalForAll(address,bool)","function isApprovedForAll(address,address) view returns (bool)","function transferFrom(address,address,uint256)","function name() view returns (string)"];
 const ABI_20 = ["function balanceOf(address) view returns (uint256)","function approve(address,uint256) returns (bool)","function allowance(address,address) view returns (uint256)","function decimals() view returns (uint8)","function symbol() view returns (string)"];
@@ -154,18 +163,39 @@ async function saveRail() {
 // ---------- mint (priced in WISE) ----------
 function mintReady() { return !!A.WSA_MINT; }
 
+function usdHint(wiseAmount) {
+  if (!lastWiseUsd) return "";
+  const u = parseFloat(wiseAmount) * lastWiseUsd;
+  // whole dollars at gift-card scale, cents only when small
+  return " (~$" + (u >= 10 ? Math.round(u) : u.toFixed(2)) + ")";
+}
+
 async function loadFee() {
   if (!mintReady()) { $("feeDisplay").textContent = "deploys with the batch"; return; }
   try {
-    const c = new ethers.Contract(A.WSA_MINT, ABI_MINT, provider);
+    const c = new ethers.Contract(A.WSA_MINT, ABI_MINT, bootRead());
     const p = await c.mintPrice();
     if (p.isZero()) { $("feeDisplay").textContent = "mints paused"; return; }
     const wise = fmt(p);
-    const usd = lastWiseUsd ? " (~$" + (parseFloat(wise) * lastWiseUsd).toFixed(2) + ")" : "";
-    $("feeDisplay").textContent = wise + " WISE" + usd;
+    $("feeDisplay").textContent = wise + " WISE" + usdHint(wise);
     $("mintApproveBtn").disabled = false;
     $("mintBtn").disabled = false;
-  } catch (e) { $("feeDisplay").textContent = "read error"; }
+  } catch (e) {
+    // try the fallback nodes once before giving up
+    for (const rpc of READ_RPCS.slice(1)) {
+      try {
+        const c = new ethers.Contract(A.WSA_MINT, ABI_MINT, new ethers.providers.JsonRpcProvider(rpc));
+        const p = await c.mintPrice();
+        if (p.isZero()) { $("feeDisplay").textContent = "mints paused"; return; }
+        const wise = fmt(p);
+        $("feeDisplay").textContent = wise + " WISE" + usdHint(wise);
+        $("mintApproveBtn").disabled = false;
+        $("mintBtn").disabled = false;
+        return;
+      } catch (err) { continue; }
+    }
+    $("feeDisplay").textContent = "read error";
+  }
 }
 
 async function bMintApprove() {
@@ -522,9 +552,10 @@ mktInit();
 
 // Sales gate: read salesOpen from the contract. OFF = no list, no buy, on-chain.
 async function checkMarketGate() {
-  if (!mktReady() || !provider) return;
+  if (!mktReady()) return;
+  const p = provider || bootRead();
   try {
-    const c = new ethers.Contract(A.MARKETPLACE, ABI_MKT, provider);
+    const c = new ethers.Contract(A.MARKETPLACE, ABI_MKT, p);
     const open = await c.salesOpen();
     const g = $("gateStatus");
     if (open) {
@@ -604,3 +635,5 @@ $("railSel").addEventListener("change", () => {
 });
 $("railSave").addEventListener("click", saveRail);
 $("railStakeBtn").addEventListener("click", () => window.open(railDoor(), "_blank", "noopener"));
+loadFee();      // fee reads through a public node - no wallet needed
+checkMarketGate(); // gate status also reads before connect
