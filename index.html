@@ -57,6 +57,7 @@ button.ghost{background:none;border:1px solid var(--gold);color:var(--gold2);bor
 .status.ok{color:var(--ok)}.status.err{color:var(--err)}.status.wait{color:var(--gold2)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-top:18px}
 .card{background:var(--navy2);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card.sel{border-color:var(--gold)}
 .card h4{color:var(--gold2);font-weight:400}
 .card .sub{font-family:'Helvetica Neue',Arial,sans-serif;font-size:.8rem;color:var(--muted)}
 .tag{display:inline-block;font-family:'Helvetica Neue',Arial,sans-serif;font-size:.68rem;letter-spacing:.08em;border:1px solid var(--gold);color:var(--gold2);border-radius:999px;padding:1px 10px;margin-top:8px}
@@ -81,6 +82,7 @@ footer a{color:var(--gold2);text-decoration:none}
   </div>
   <nav class="tabs" id="tabs">
     <button data-tab="mint" class="on">Mint</button>
+    <button data-tab="deposit">Deposit</button>
     <button data-tab="positions">Positions</button>
     <button data-tab="bundles">Bundles</button>
     <button data-tab="directory">Coming Soon</button>
@@ -112,6 +114,40 @@ footer a{color:var(--gold2);text-decoration:none}
       <button class="gold" id="mintBtn" onclick="doMint()" disabled>2. Mint My Work</button>
       <div class="status" id="mintStatus"></div>
       <p class="note" style="margin-top:10px">Want the full white-glove studio (five captures, story, certificate line)? <a href="https://wisestake.consulting/mint/" style="color:var(--gold2)">Open the Mint Studio &rarr;</a></p>
+    </div>
+  </section>
+
+  <!-- DEPOSIT -->
+  <section id="tab-deposit" class="hidden">
+    <div class="panel">
+      <h3>Deposit USDC - earn through the protocol's engines</h3>
+      <p class="note">Two engines take USDC and pay yield: <b>World Mobile Nodes at 20% APY</b> and <b>Sovren at 40% APR</b>. Both are entered through a founder's referral rail - pick whose teaching brought you here, then pick your engine. You finish inside Wise One; your yield-bearing receipt (wtnUSDC or wsnUSDC) appears in the Positions tab here.</p>
+      <div class="grid">
+        <div class="card" id="depCardDoc" onclick="depPickRail('doc')" style="cursor:pointer">
+          <h4>Doc's rail</h4>
+          <p class="sub">wisestake.eth - the English rail</p>
+          <span class="tag" id="depTagDoc"></span>
+        </div>
+        <div class="card" id="depCardDenise" onclick="depPickRail('denise')" style="cursor:pointer">
+          <h4>Denise's rail</h4>
+          <p class="sub">wisestakes.eth</p>
+          <span class="tag" id="depTagDenise"></span>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <h4>World Mobile Nodes - 20% APY</h4>
+          <p class="sub">Deposit USDC, receive wtnUSDC receipts. Node infrastructure yield, paid daily.</p>
+          <button class="gold" onclick="depOpen()">Deposit through <span id="depDoor1">the rail</span> &rarr;</button>
+        </div>
+        <div class="card">
+          <h4>Sovren - 40% APR</h4>
+          <p class="sub">Deposit USDC, receive wsnUSDC receipts. The highest rate on the platform.</p>
+          <button class="gold" onclick="depOpen()">Deposit through <span id="depDoor2">the rail</span> &rarr;</button>
+        </div>
+      </div>
+      <p class="note" style="margin-top:14px;border-left:2px solid var(--err);padding-left:12px;color:var(--cream)"><b>One rule inside Wise One:</b> leave the <b>team referral address field BLANK</b>. The rail you picked above already carries the credit - typing anything there would split it away from this community.</p>
+      <p class="note" style="margin-top:10px">Bundling vault receipts into bundle tokens is in testing right now - when the full cycle is verified, your wtnUSDC and wsnUSDC will wrap just like Signature Stakes. Until then, your receipts sit in Positions, already earning.</p>
     </div>
   </section>
 
@@ -287,5 +323,36 @@ footer a{color:var(--gold2);text-decoration:none}
 
 <script src="js/config.js"></script>
 <script src="js/app.js"></script>
+<script>
+// ---------- Deposit tab: rail picker + engine doors ----------
+const DEP_RAILS = {
+  doc:    { label: "Doc's rail",    addr: "0x142A534C60e16695cfE2aBab86f8DEcb85d568c0" },
+  denise: { label: "Denise's rail", addr: "0x84EBf885B2655e8be3D3492ca81DFaCad04B5e7f" }
+};
+let depRail = localStorage.getItem("dep_rail") || "doc";
+function depPickRail(k){ depRail = k; localStorage.setItem("dep_rail", k); depRender(); }
+function depRender(){
+  document.getElementById("depCardDoc").classList.toggle("sel", depRail==="doc");
+  document.getElementById("depCardDenise").classList.toggle("sel", depRail==="denise");
+  document.getElementById("depTagDoc").textContent = depRail==="doc" ? "SELECTED" : "";
+  document.getElementById("depTagDenise").textContent = depRail==="denise" ? "SELECTED" : "";
+  const l = DEP_RAILS[depRail].label;
+  document.getElementById("depDoor1").textContent = l;
+  document.getElementById("depDoor2").textContent = l;
+}
+function depOpen(){
+  window.open("https://app.wisetoken.com/?ref=" + DEP_RAILS[depRail].addr, "_blank", "noopener");
+}
+depRender();
+// Visibility bridge: the main tab engine does not know about this section,
+// so show/hide it alongside the built-in tabs.
+(function(){
+  const sec = document.getElementById("tab-deposit");
+  document.querySelectorAll("#tabs button").forEach(b => b.addEventListener("click", () => {
+    if (b.dataset.tab === "deposit") { sec.classList.remove("hidden"); }
+    else { sec.classList.add("hidden"); }
+  }));
+})();
+</script>
 </body>
 </html>
