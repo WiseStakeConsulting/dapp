@@ -265,7 +265,7 @@ async function loadPositions() {
 // ---------- bundle engine ----------
 // The bundle takes CUSTODY of what you already hold (stake card, optional
 // rider NFT, vault receipts) and mints ONE receipt NFT as the title. The
-// receipt holder scrapes yield - patron share paid automatically. Selling
+// receipt holder scrapes the yield - patron share paid automatically. Selling
 // or moving the receipt moves the whole bundle, atomically. Closing
 // returns every component and burns the receipt. The referrer recorded
 // on the bundle is the rail picked above.
@@ -317,14 +317,23 @@ async function loadBundleForm() {
   if (!provider || !account) return;
   const sel = $("cbCard"); sel.innerHTML = "";
   try {
-    const sig = new ethers.Contract(A.SIG_STAKES, ABI_721, provider);
+    const sig = new ethers.Contract(A.SIG_STAKES, ABI_721.concat(["function NFTStake(uint256) view returns (bytes16)"]), provider);
+    const wise = new ethers.Contract(A.WISE, ["function checkStakeByID(address,bytes16) view returns (uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bool,bool)"], provider);
     const ids = await sig.walletOfOwner(account);
-    ids.forEach(id => {
+    for (const id of ids) {
       const o = document.createElement("option");
       o.value = id.toString();
-      o.textContent = "Card #" + id.toString();
+      let txt = "Signature Stake #" + id.toString() + " - Transferable";
+      try {
+        const stakeId = await sig.NFTStake(id);
+        const s = await wise.checkStakeByID(A.SIG_STAKES, stakeId);
+        const raw = fmt(s[5]);
+        const amt = Number(raw).toLocaleString(undefined, {maximumFractionDigits: 2});
+        txt += " - " + amt + " WISE" + usdHint(raw) + " - " + s[1].toString() + "-day term" + (s[10] ? " - matured" : "");
+      } catch (e) {}
+      o.textContent = txt;
       sel.appendChild(o);
-    });
+    }
   } catch (e) {}
   if (!sel.children.length) sel.innerHTML = "<option value=''>No Signature Stakes in this wallet</option>";
   const vsel = $("wvVault"); vsel.innerHTML = "";
