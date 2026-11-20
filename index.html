@@ -94,8 +94,8 @@ footer a{color:var(--gold2);text-decoration:none}
 <main class="wrap">
   <div class="hero">
     <div class="eyebrow">One wallet &middot; Ethereum mainnet</div>
-    <h1>Mint it. Hold it. Bundle it. <span style="color:var(--gold2)">Move it.</span></h1>
-    <p class="lede">Every position here is a token, so every position can move. Prices on the marketplace are in WISE. Gas is paid in ETH - use the Swap tab to load up on both.</p>
+    <h1 id="heroH1">Mint it. Hold it. Bundle it. <span style="color:var(--gold2)">Move it.</span></h1>
+    <p class="lede" id="heroLede">Every position here is a token, so every position can move. Prices on the marketplace are in WISE. Gas is paid in ETH - use the Swap tab to load up on both.</p>
   </div>
 
   <!-- MINT -->
@@ -122,6 +122,7 @@ footer a{color:var(--gold2);text-decoration:none}
     <div class="panel">
       <h3>Deposit USDC - earn through the protocol's engines</h3>
       <p class="note">Two engines take USDC and pay yield: <b>World Mobile Nodes at 20% APY</b> and <b>Sovren at 40% APR</b>. Both are entered through a founder's referral rail - pick whose teaching brought you here, then pick your engine. You finish inside Wise One; your yield-bearing receipt (wtnUSDC or wsnUSDC) appears in the Positions tab here.</p>
+      <p class="note" style="margin-top:10px"><b>Know the exit before you enter:</b> withdrawals run through a <b>sell queue</b> - when you want out, your receipt joins the queue and is paid in the order it arrived. It is not instant. Deposit money you can leave alone while it earns, and treat the exit as a plan, not a panic button.</p>
       <div class="grid">
         <div class="card" id="depCardDoc" onclick="depPickRail('doc')" style="cursor:pointer">
           <h4>Wise Stake Consulting Rail</h4>
@@ -323,6 +324,28 @@ footer a{color:var(--gold2);text-decoration:none}
 <script src="js/config.js"></script>
 <script src="js/app.js"></script>
 <script>
+// ---------- Per-tab hero: every tab gets its own headline ----------
+const HERO = {
+  mint:      { h: 'Mint it. Hold it. Bundle it. <span style="color:var(--gold2)">Move it.</span>',
+               l: "Every position here is a token, so every position can move. Prices on the marketplace are in WISE. Gas is paid in ETH - use the Swap tab to load up on both." },
+  deposit:   { h: 'Deposit Stablecoins. Earn More Stablecoins. <span style="color:var(--gold2)">Compound it. Repeat.</span>',
+               l: "USDC in, yield-bearing receipts out - through World Mobile at 20% APY or Sovren at 40% APR, entered through the rail whose teaching brought you here." },
+  positions: { h: 'Got Positions? Got Bundles? <span style="color:var(--gold2)">Got Yield-Bearing Mints?</span>',
+               l: "Everything you hold shows up here as it earns. Bundle it, move it, sell it, or pass it down - nothing on this page is stuck in place." },
+  bundles:   { h: 'Bring What You Have. <span style="color:var(--gold2)">Bundle It.</span>',
+               l: "Give an NFT a companion. Give art a song new meaning. One stake, one receipt, one title for the whole pile - and it all moves together." },
+  directory: { h: 'Might Sell. <span style="color:var(--gold2)">Not For Sale.</span>',
+               l: "A registry of holders open to offers someday - no prices, no payments, no pressure. Just a door knocked on politely, on-chain." },
+  market:    { h: 'Buy the Receipt. <span style="color:var(--gold2)">Own the Whole Bundle.</span>',
+               l: "Atomic sales in WISE: the contract swaps ownership and splits the fee in one transaction. Opening to the public after legal review." },
+  swap:      { h: 'Get WISE. <span style="color:var(--gold2)">Get Gas.</span>',
+               l: "The on-ramp for everything this dapp does - WISE for fees, ETH for gas, straight from Uniswap into the wallet you connected." }
+};
+function setHero(tab){
+  const t = HERO[tab]; if(!t) return;
+  document.getElementById("heroH1").innerHTML = t.h;
+  document.getElementById("heroLede").textContent = t.l;
+}
 // ---------- Deposit tab: rail picker + engine doors ----------
 const DEP_RAILS = {
   doc:    { label: "Wise Stake Consulting Rail", addr: "0x142A534C60e16695cfE2aBab86f8DEcb85d568c0" },
@@ -343,13 +366,13 @@ function depOpen(){
   window.open("https://app.wisetoken.com/?ref=" + DEP_RAILS[depRail].addr, "_blank", "noopener");
 }
 depRender();
-// Visibility bridge: the main tab engine does not know about this section,
-// so show/hide it alongside the built-in tabs.
+// Wire hero + deposit visibility onto every tab click
 (function(){
-  const sec = document.getElementById("tab-deposit");
+  const dep = document.getElementById("tab-deposit");
   document.querySelectorAll("#tabs button").forEach(b => b.addEventListener("click", () => {
-    if (b.dataset.tab === "deposit") { sec.classList.remove("hidden"); }
-    else { sec.classList.add("hidden"); }
+    setHero(b.dataset.tab);
+    if (b.dataset.tab === "deposit") { dep.classList.remove("hidden"); }
+    else { dep.classList.add("hidden"); }
   }));
 })();
 </script>
