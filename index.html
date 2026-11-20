@@ -124,7 +124,7 @@ footer a{color:var(--gold2);text-decoration:none}
       <p class="note">Two engines take USDC and pay yield: <b>World Mobile Nodes at 20% APY</b> and <b>Sovren at 40% APR</b>. Both are entered through a founder's referral rail - pick whose teaching brought you here, then pick your engine. You finish inside Wise One; your yield-bearing receipt (wtnUSDC or wsnUSDC) appears in the Positions tab here.</p>
       <div class="grid">
         <div class="card" id="depCardDoc" onclick="depPickRail('doc')" style="cursor:pointer">
-          <h4>Doc's rail</h4>
+          <h4>Wise Stake Consulting Rail</h4>
           <p class="sub">wisestake.eth - the English rail</p>
           <span class="tag" id="depTagDoc"></span>
         </div>
@@ -146,7 +146,6 @@ footer a{color:var(--gold2);text-decoration:none}
           <button class="gold" onclick="depOpen()">Deposit through <span id="depDoor2">the rail</span> &rarr;</button>
         </div>
       </div>
-      <p class="note" style="margin-top:14px;border-left:2px solid var(--err);padding-left:12px;color:var(--cream)"><b>One rule inside Wise One:</b> leave the <b>team referral address field BLANK</b>. The rail you picked above already carries the credit - typing anything there would split it away from this community.</p>
       <p class="note" style="margin-top:10px">Bundling vault receipts into bundle tokens is in testing right now - when the full cycle is verified, your wtnUSDC and wsnUSDC will wrap just like Signature Stakes. Until then, your receipts sit in Positions, already earning.</p>
     </div>
   </section>
@@ -326,7 +325,7 @@ footer a{color:var(--gold2);text-decoration:none}
 <script>
 // ---------- Deposit tab: rail picker + engine doors ----------
 const DEP_RAILS = {
-  doc:    { label: "Doc's rail",    addr: "0x142A534C60e16695cfE2aBab86f8DEcb85d568c0" },
+  doc:    { label: "Wise Stake Consulting Rail", addr: "0x142A534C60e16695cfE2aBab86f8DEcb85d568c0" },
   denise: { label: "Denise's rail", addr: "0x84EBf885B2655e8be3D3492ca81DFaCad04B5e7f" }
 };
 let depRail = localStorage.getItem("dep_rail") || "doc";
