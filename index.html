@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wise Stake Dapp - Everything as a Token</title>
-<meta name="description" content="Mint, deposit, bundle, and trade atomically. One wallet, everything as a token.">
+<title>Wise Stake Dapp - Everything Moves as One</title>
+<meta name="description" content="Mint, deposit, bundle, and trade atomically. One wallet, everything moves as one.">
 <meta name="robots" content="noindex">
 
 <!-- Share preview (what shows when this link is texted or posted) -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://dapp.wisestake.consulting/">
 <meta property="og:title" content="Wise Stake Consulting">
-<meta property="og:description" content="The dapp where everything is a yield-bearing token, distributed by the protocol.">
+<meta property="og:description" content="Backing What's Yours. Signature Stakes anchor your digital collectibles - one wallet, everything moves as one.">
 <meta property="og:image" content="https://dapp.wisestake.consulting/wsc-dapp-og-card.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Wise Stake Consulting">
-<meta name="twitter:description" content="The dapp where everything is a yield-bearing token, distributed by the protocol.">
+<meta name="twitter:description" content="Backing What's Yours. Signature Stakes anchor your digital collectibles - one wallet, everything moves as one.">
 <meta name="twitter:image" content="https://dapp.wisestake.consulting/wsc-dapp-og-card.png">
 
 <!-- The owl: browser tab, bookmarks, and the MetaMask connect popup -->
@@ -74,7 +74,7 @@ footer a{color:var(--gold2);text-decoration:none}
 <body>
 <header>
   <div class="bar">
-    <a class="brand" href="https://wisestake.consulting/"><b>Wise Stake<small>The dapp - everything as a token</small></b></a>
+    <a class="brand" href="https://wisestake.consulting/"><img src="wsc-logo.png" alt="WSC seal" style="width:36px;height:36px;border-radius:50%;object-fit:cover"><b>Wise Stake Consulting<small>Backing What's Yours.</small></b></a>
     <div class="walletbox">
       <span id="priceTag">WISE <b>-</b></span>
       <button id="walletBtn" onclick="connect()">Connect Wallet</button>
@@ -154,7 +154,17 @@ footer a{color:var(--gold2);text-decoration:none}
   <section id="tab-bundles" class="hidden">
     <div class="panel">
       <div class="panel" style="background:var(--navy2);margin-top:0">
-        <h3>Referral rail - whose name is on the teaching</h3>
+        <h3>New here? What can become an NFT - and what a bundle is</h3>
+        <p class="note">An NFT (the technical name is ERC-721) is a one-of-a-kind token that lives in your wallet. Think <b>deed, not coin</b>: a WISE coin is money, an NFT is the deed to one specific thing. Anything you can name can be one - and that is the whole idea of "everything moves as one."</p>
+        <p class="note" style="margin-top:8px"><b>What people are putting in bundles here:</b></p>
+        <ul class="note" style="margin-top:4px;padding-left:20px">
+          <li><b>Art and music</b> - minted in the Mints tab, owned by the artist from block one.</li>
+          <li><b>A Signature Stake</b> - your Wise One stake as a transferable NFT, still earning while it sits inside the bundle.</li>
+          <li><b>Any collectible</b> - an artist mint, a CryptoKitty, any ERC-721 you hold, attached as a rider.</li>
+          <li><b>An agreement</b> - the terms of a deal between you and a patron, minted as the on-chain record of what was agreed. It does not replace a lawyer; it replaces the argument. Anyone can read it, nobody can quietly change it.</li>
+        </ul>
+        <p class="note" style="margin-top:8px"><b>How the patron split works, in plain math:</b> when the stake inside a bundle pays yield, whoever holds the bundle title scrapes it. WSC takes a flat 2% to service the bundle. The rest follows the split you set when you create it. Example: a 100 WISE yield scrape with the patron set to 90% - 2 WISE goes to WSC, 88.2 goes to your patron, 9.8 stays with the title holder. Set no patron and it is all yours. The contract enforces the split automatically - no trust required, no invoice, no waiting.</p>
+        <h3 style="margin-top:18px">Referral rail - whose name is on the teaching</h3>
         <p class="note">Stakes are created in Wise One through a rail's referral door. Pick a rail and it sticks in this browser - it also becomes the referrer of record on bundles you create below. Rail owners have their own front door: <a id="railLink" href="#" style="color:var(--gold2);word-break:break-all"></a> - anyone opening that link lands with the rail pre-set.</p>
         <label for="railSel">Referral rail</label>
         <select id="railSel"></select>
