@@ -43,10 +43,10 @@ async function connect() {
       return;
     }
     $("walletBtn").textContent = short(account);
-    loadPositions();
+    if ($("posGrid")) loadPositions();
     loadFee();
     checkMarketGate();
-    loadDirectory();
+    if ($("dirGrid")) loadDirectory();
     loadBundles();
     loadBundleForm();
   } catch (e) { console.error(e); }
@@ -56,14 +56,12 @@ async function connect() {
 document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
   document.querySelectorAll("#tabs button").forEach(x => x.classList.remove("on"));
   b.classList.add("on");
-  ["mint","positions","bundles","directory","market","swap"].forEach(t =>
+  ["mint","bundles","market","swap"].forEach(t =>
     $("tab-" + t).classList.toggle("hidden", t !== b.dataset.tab));
   if (b.dataset.tab === "swap" && !$("dexFrame").src) {
     // DexScreener allows embedding; load the WISE pair chart on first open
     $("dexFrame").src = "https://dexscreener.com/ethereum/" + A.WISE + "?embed=1&theme=dark";
   }
-  if (b.dataset.tab === "positions" && account) loadPositions();
-  if (b.dataset.tab === "directory" && provider) loadDirectory();
   if (b.dataset.tab === "bundles" && provider) { loadBundles(); loadBundleForm(); }
 });
 
