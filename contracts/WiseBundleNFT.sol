@@ -189,9 +189,9 @@ contract WiseBundleNFT {
     IWiseStakingNFT public immutable card;
     address public immutable treasury;
 
-    uint16 public feeBps = 100; // 1% of scraped yield
+    uint16 public feeBps = 200; // 2% of scraped yield - bundle servicing + ops (Arweave)
     uint16 public constant FEE_CAP_BPS = 500;
-    uint16 public constant PATRON_CAP_BPS = 5000; // 50%, matching the old wrapper's 50/50
+    uint16 public constant PATRON_CAP_BPS = 9800; // 98% ceiling - 49/49 style split, 2% fee off the top
 
     mapping(address => bool) public isVaultToken;
     mapping(address => address) public vaultUnderlying; // vault receipt => deposit asset (e.g. USDC)
